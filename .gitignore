@@ -133,3 +133,4 @@ dmypy.json
 
 # Project, Debug and Test
 *.pth.tar
+*.pt

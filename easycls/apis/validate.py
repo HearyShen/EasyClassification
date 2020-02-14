@@ -18,21 +18,18 @@ def validate(val_loader, model, criterion, args):
 
     with torch.no_grad():
         end = time.time()
-        for i, (images, target) in enumerate(val_loader):
-            # if args.gpu is not None:
-            #     images = images.cuda(args.gpu, non_blocking=True)
-            # target = target.cuda(args.gpu, non_blocking=True)
-            target = target.cuda(non_blocking=True)
+        for i, (inputs, targets) in enumerate(val_loader):
+            targets = targets.cuda(non_blocking=True)
 
-            # compute output
-            output = model(images)
-            loss = criterion(output, target)
+            # compute outputs
+            outputs = model(inputs)
+            loss = criterion(outputs, targets)
 
             # measure accuracy and record loss
-            acc1, acc5 = accuracy(output, target, topk=(1, 5))
-            losses.update(loss.item(), images.size(0))
-            top1.update(acc1[0], images.size(0))
-            top5.update(acc5[0], images.size(0))
+            acc1, acc5 = accuracy(outputs, targets, topk=(1, 5))
+            losses.update(loss.item(), inputs.size(0))
+            top1.update(acc1[0], inputs.size(0))
+            top5.update(acc5[0], inputs.size(0))
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -41,7 +38,6 @@ def validate(val_loader, model, criterion, args):
             if i % args.print_freq == 0:
                 progress.display(i)
 
-        # TODO: this should also be done with the ProgressMeter
         print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
               .format(top1=top1, top5=top5))
 
