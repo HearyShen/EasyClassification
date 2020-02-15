@@ -38,7 +38,7 @@ def validate(val_loader, model, criterion, args):
             if i % args.print_freq == 0:
                 progress.display(i)
 
-        print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
-              .format(top1=top1, top5=top5))
+        # print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
+        #       .format(top1=top1, top5=top5))
 
-    return top1.avg
+    return top1.avg, top5.avg

@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from configparser import ConfigParser
 import importlib
 import torch
+import torch.backends.cudnn as cudnn
 
 # insert root dir path to sys.path to import easycls
 import sys
@@ -95,7 +96,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
             print("=> no checkpoint found at '{}'".format(args.resume))
 
     # speedup for batches with fixed-size input
-    # cudnn.benchmark = True
+    cudnn.benchmark = cfgs.getboolean('learning', 'cudnn-benchmark')
 
     # load dataset for specific task
     taskname = cfgs.get('data', 'task')
@@ -103,15 +104,17 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
 
     # run-time import dataset according to task in config
     task = importlib.import_module('easycls.datasets.' + taskname)
+    batch_size = cfgs.getint('learning', 'batch-size')
+    dataload_workers = cfgs.getint('learning', 'dataload-workers')
 
     # prepare dataset and dataloader
     tic = time.time()
     train_dataset = task.get_train_dataset(cfgs)
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
-        batch_size=cfgs.getint('learning', 'batch-size'),
+        batch_size=batch_size,
         shuffle=True,
-        num_workers=cfgs.getint('learning', 'dataload-workers'),
+        num_workers=dataload_workers,
         pin_memory=True,
         sampler=None)
     toc = time.time()
@@ -121,9 +124,9 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     val_dataset = task.get_val_dataset(cfgs)
     val_loader = torch.utils.data.DataLoader(
         val_dataset,
-        batch_size=cfgs.getint('learning', 'batch-size'),
+        batch_size=batch_size,
         shuffle=False,
-        num_workers=cfgs.getint('learning', 'dataload-workers'),
+        num_workers=dataload_workers,
         pin_memory=True)
     toc = time.time()
     print(f'Validation set loaded in {(toc-tic):.3f}s')
@@ -132,9 +135,9 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     test_dataset = task.get_test_dataset(cfgs)
     test_loader = torch.utils.data.DataLoader(
         test_dataset,
-        batch_size=cfgs.getint('learning', 'batch-size'),
+        batch_size=batch_size,
         shuffle=False,
-        num_workers=cfgs.getint('learning', 'dataload-workers'),
+        num_workers=dataload_workers,
         pin_memory=True)
     toc = time.time()
     print(f'Test set loaded in {(toc-tic):.3f}s')
@@ -143,20 +146,22 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     print(f'Start training at {localtime}')
     for epoch in range(start_epoch, cfgs.getint('learning', 'epochs')):
         lr = helpers.adjust_learning_rate(optimizer, epoch, cfgs)
-        print(f'Epoch: {epoch+1}\tLearning-rate: {lr}')
+        print(f'Epoch: {epoch+1}\tLearning-rate: {lr}\tBatch-size: {batch_size}')
 
         # train for one epoch
         apis.train(train_loader, model, criterion, optimizer, epoch, args)
 
         # evaluate on validation set
         print(f'Evaluating on Validation set:')
-        acc1 = apis.validate(val_loader, model, criterion, args)
+        val_acc1, val_acc5 = apis.validate(val_loader, model, criterion, args)
+        print(f'[Val] Acc1: {val_acc1:.2f}\tAcc5: {val_acc5:.2f}')
         print(f'Evaluating on Test Set:')
-        apis.validate(test_loader, model, criterion, args)
+        test_acc1, test_acc5 = apis.validate(test_loader, model, criterion, args)
+        print(f'[Test] Acc1: {test_acc1:.2f}\tAcc5: {test_acc5:.2f}')
 
         # remember best acc@1 and save checkpoint
-        is_best = acc1 > best_acc1
-        best_acc1 = max(acc1, best_acc1)
+        is_best = val_acc1 > best_acc1
+        best_acc1 = max(val_acc1, best_acc1)
 
         helpers.save_checkpoint(
             {

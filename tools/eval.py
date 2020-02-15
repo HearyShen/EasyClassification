@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from configparser import ConfigParser
 import importlib
 import torch
+import torch.backends.cudnn as cudnn
 
 # insert root dir path to sys.path to import easycls
 import sys
@@ -75,7 +76,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
             print("=> no checkpoint found at '{}'".format(args.resume))
 
     # speedup for batches with fixed-size input
-    # cudnn.benchmark = True
+    cudnn.benchmark = cfgs.getboolean('learning', 'cudnn-benchmark')
 
     # load dataset for specific task
     taskname = cfgs.get('data', 'task')
@@ -109,9 +110,11 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
 
     print('Evaluate')
     print(f'Evaluating on Validation set:')
-    apis.validate(val_loader, model, criterion, args)
+    val_acc1, val_acc5 = apis.validate(val_loader, model, criterion, args)
+    print(f'[Val] Acc1: {val_acc1:.2f}\tAcc5: {val_acc5:.2f}')
     print(f'Evaluating on Test Set:')
-    apis.validate(test_loader, model, criterion, args)
+    test_acc1, test_acc5 = apis.validate(test_loader, model, criterion, args)
+    print(f'[Test] Acc1: {test_acc1:.2f}\tAcc5: {test_acc5:.2f}')
     return
 
 if __name__ == "__main__":
