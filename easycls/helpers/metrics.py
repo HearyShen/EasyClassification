@@ -75,13 +75,21 @@ class ConfusionMatrix():
         self.f1 = 0
 
     def update(self, outputs, targets):
+        """
+        Update the class's confusion matrix
+
+        Args:
+            outputs: Tensor, model's outputs, [batch_size, model_output_size]
+            targets: Tensor, ground-truth targets, [batch_size]
+        """
         with torch.no_grad():
+            values, indices = outputs.max(dim=1)  # values and indices, [batch_size]
             # True: index = class_index, False: index != class_index
             batch_size = targets.size(0)
             C_expand = torch.tensor(self.class_index).expand_as(targets)
             AP_bools = targets.eq(C_expand)     # Boolean[batch_size]
             AN_bools = AP_bools.logical_not()
-            PP_bools = outputs.eq(C_expand)     # Boolean[batch_size]
+            PP_bools = indices.eq(C_expand)     # Boolean[batch_size]
             PN_bools = PP_bools.logical_not()
 
             # compute ConfusionMatrix
@@ -90,6 +98,7 @@ class ConfusionMatrix():
             self.FN = PN_bools.eq(AP_bools).int().sum().item()
             self.TN = PN_bools.eq(AN_bools).int().sum().item()
 
+            # TODO: debug the error in this assertion
             assert batch_size == self.TP + self.FP + self.FN + self.TN
 
             # compute accuracy, precision, recall and F1 metrics
@@ -150,3 +159,15 @@ class ConfusionMatrix():
 
         return self.f1
         
+
+if __name__ == "__main__":
+    batch_size = 8
+    class_count = 3
+
+    outputs = torch.rand(batch_size, class_count)
+    targets = torch.randint(0, class_count, [batch_size])
+
+    cm0 = ConfusionMatrix(0)
+    cm0.update(outputs, targets)
+
+    print(f'Acc={cm0.accuracy}, Prec={cm0.precision}, Recall={cm0.recall}, F1={cm0.f1}')
