@@ -111,10 +111,10 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     print('Evaluate')
     print(f'Evaluating on Validation set:')
     val_acc1, val_acc5 = apis.validate(val_loader, model, criterion, args)
-    print(f'[Val] Acc1: {val_acc1:.2f}\tAcc5: {val_acc5:.2f}')
+    print(f'[Val] Acc1: {val_acc1:.2f}%\tAcc5: {val_acc5:.2f}%')
     print(f'Evaluating on Test Set:')
     test_acc1, test_acc5 = apis.validate(test_loader, model, criterion, args)
-    print(f'[Test] Acc1: {test_acc1:.2f}\tAcc5: {test_acc5:.2f}')
+    print(f'[Test] Acc1: {test_acc1:.2f}%\tAcc5: {test_acc5:.2f}%')
     return
 
 if __name__ == "__main__":

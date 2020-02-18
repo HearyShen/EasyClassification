@@ -2,11 +2,11 @@ import time
 from ..helpers import AverageMeter, ProgressMeter, accuracy
 
 def train(train_loader, model, criterion, optimizer, epoch, args):
-    batch_time = AverageMeter('Time', ':6.3f')
-    data_time = AverageMeter('Data', ':6.3f')
+    batch_time = AverageMeter('Tbatch', ':6.3f', 's')
+    data_time = AverageMeter('Tdata', ':6.3f', 's')
     losses = AverageMeter('Loss', ':.4e')
-    top1 = AverageMeter('Acc@1', ':6.2f')
-    top5 = AverageMeter('Acc@5', ':6.2f')
+    top1 = AverageMeter('Acc@1', ':6.2f', '%')
+    top5 = AverageMeter('Acc@5', ':6.2f', '%')
     progress = ProgressMeter(
         len(train_loader),
         [batch_time, data_time, losses, top1, top5],
@@ -29,8 +29,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
         losses.update(loss.item(), images.size(0))
-        top1.update(acc1[0], images.size(0))
-        top5.update(acc5[0], images.size(0))
+        top1.update(acc1*100, images.size(0))
+        top5.update(acc5*100, images.size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()

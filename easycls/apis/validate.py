@@ -4,10 +4,10 @@ import torch
 from ..helpers import AverageMeter, ProgressMeter, accuracy
 
 def validate(val_loader, model, criterion, args):
-    batch_time = AverageMeter('Time', ':6.3f')
+    batch_time = AverageMeter('Time', ':6.3f', 's')
     losses = AverageMeter('Loss', ':.4e')
-    top1 = AverageMeter('Acc@1', ':6.2f')
-    top5 = AverageMeter('Acc@5', ':6.2f')
+    top1 = AverageMeter('Acc@1', ':6.2f', '%')
+    top5 = AverageMeter('Acc@5', ':6.2f', '%')
     progress = ProgressMeter(
         len(val_loader),
         [batch_time, losses, top1, top5],
@@ -28,8 +28,8 @@ def validate(val_loader, model, criterion, args):
             # measure accuracy and record loss
             acc1, acc5 = accuracy(outputs, targets, topk=(1, 5))
             losses.update(loss.item(), inputs.size(0))
-            top1.update(acc1[0], inputs.size(0))
-            top5.update(acc5[0], inputs.size(0))
+            top1.update(acc1*100, inputs.size(0))
+            top5.update(acc5*100, inputs.size(0))
 
             # measure elapsed time
             batch_time.update(time.time() - end)

@@ -28,9 +28,8 @@ def accuracy(outputs, targets, topk=(1, )):
 
         res = []
         for k in topk:
-            correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
-            res.append(correct_k.mul_(100.0 /
-                                      batch_size))  # accuracy in [0,100] %
+            acc_k = correct[:k].view(-1).float().sum() / batch_size
+            res.append(acc_k.item())  # accuracy in [0,1],float
         return res
 
 

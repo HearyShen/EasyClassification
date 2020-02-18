@@ -10,9 +10,10 @@ class AverageMeter(object):
         sum: sum of computed values
         count: count of computed values
     """
-    def __init__(self, name, fmt=':f'):
+    def __init__(self, name, fmt=':f', unit=''):
         self.name = name
         self.fmt = fmt
+        self.unit = unit
         self.reset()
 
     def reset(self):
@@ -28,7 +29,7 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
     def __str__(self):
-        fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
+        fmtstr = '{name} {val' + self.fmt + '}' + self.unit + ' ({avg' + self.fmt + '}' + self.unit + ')'
         return fmtstr.format(name=self.name, val=self.val, avg=self.avg)
         # return fmtstr.format(**self.__dict__)
 
