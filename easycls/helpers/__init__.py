@@ -4,3 +4,4 @@ from .learning import *
 from .logs import *
 from .metrics import *
 from .meters import *
+from .times import *

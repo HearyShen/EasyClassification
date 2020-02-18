@@ -109,7 +109,6 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     dataload_workers = cfgs.getint('learning', 'dataload-workers')
 
     # prepare dataset and dataloader
-    tic = time.time()
     train_dataset = task.get_train_dataset(cfgs)
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
@@ -118,10 +117,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         num_workers=dataload_workers,
         pin_memory=True,
         sampler=None)
-    toc = time.time()
-    print(f'Train set loaded in {(toc-tic):.3f}s')
 
-    tic = time.time()
     val_dataset = task.get_val_dataset(cfgs)
     val_loader = torch.utils.data.DataLoader(
         val_dataset,
@@ -129,10 +125,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         shuffle=False,
         num_workers=dataload_workers,
         pin_memory=True)
-    toc = time.time()
-    print(f'Validation set loaded in {(toc-tic):.3f}s')
 
-    tic = time.time()
     test_dataset = task.get_test_dataset(cfgs)
     test_loader = torch.utils.data.DataLoader(
         test_dataset,
@@ -140,10 +133,8 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         shuffle=False,
         num_workers=dataload_workers,
         pin_memory=True)
-    toc = time.time()
-    print(f'Test set loaded in {(toc-tic):.3f}s')
 
-    localtime = time.asctime(time.localtime(time.time()))
+    localtime = helpers.readable_time()
     print(f'Start training at {localtime}')
     epoch_time = helpers.AverageMeter('Tepoch', ':.3f', 's')
     total_epoch = cfgs.getint('learning', 'epochs')
@@ -179,9 +170,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         # measure the elapsed time
         toc = time.time()
         epoch_time.update(toc - tic)
-        seconds_left = epoch_time.avg * (total_epoch - epoch - 1)
-        time_left = datetime.timedelta(seconds=int(seconds_left))
-        eta_time = time.asctime(time.localtime(time.time() + seconds_left))
+        eta_time, time_left = helpers.readable_eta(epoch_time.avg * (total_epoch - epoch - 1))
         print(f'{epoch_time}\tETA: {eta_time} (in {time_left})')
 
 
