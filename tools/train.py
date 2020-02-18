@@ -1,5 +1,6 @@
 import os
 import time
+import datetime
 from argparse import ArgumentParser
 from configparser import ConfigParser
 import importlib
@@ -144,9 +145,12 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
 
     localtime = time.asctime(time.localtime(time.time()))
     print(f'Start training at {localtime}')
-    for epoch in range(start_epoch, cfgs.getint('learning', 'epochs')):
+    epoch_time = helpers.AverageMeter('Tepoch', ':.3f', 's')
+    total_epoch = cfgs.getint('learning', 'epochs')
+    for epoch in range(start_epoch, total_epoch):
+        tic = time.time()
         lr = helpers.adjust_learning_rate(optimizer, epoch, cfgs)
-        print(f'Epoch: {epoch+1}\tLearning-rate: {lr}\tBatch-size: {batch_size}')
+        print(f'Epoch: {epoch}\tLearning-rate: {lr}\tBatch-size: {batch_size}')
 
         # train for one epoch
         apis.train(train_loader, model, criterion, optimizer, epoch, args)
@@ -171,6 +175,14 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
                 'best_acc1': best_acc1,
                 'optimizer': optimizer.state_dict(),
             }, is_best)
+            
+        # measure the elapsed time
+        toc = time.time()
+        epoch_time.update(toc - tic)
+        seconds_left = epoch_time.avg * (total_epoch - epoch - 1)
+        time_left = datetime.timedelta(seconds=int(seconds_left))
+        eta_time = time.asctime(time.localtime(time.time() + seconds_left))
+        print(f'{epoch_time}\tETA: {eta_time} (in {time_left})')
 
 
 if __name__ == "__main__":
