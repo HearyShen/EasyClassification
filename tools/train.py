@@ -148,10 +148,10 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
 
         # evaluate on validation set
         print(f'Evaluating on Validation set:')
-        val_acc1, val_acc5 = apis.validate(val_loader, model, criterion, args)
+        val_acc1, val_acc5 = apis.validate(val_loader, model, criterion, args, cfgs)
         print(f'[Val] Acc1: {val_acc1:.2f}\tAcc5: {val_acc5:.2f}')
         print(f'Evaluating on Test Set:')
-        test_acc1, test_acc5 = apis.validate(test_loader, model, criterion, args)
+        test_acc1, test_acc5 = apis.validate(test_loader, model, criterion, args, cfgs)
         print(f'[Test] Acc1: {test_acc1:.2f}\tAcc5: {test_acc5:.2f}')
 
         # remember best acc@1 and save checkpoint

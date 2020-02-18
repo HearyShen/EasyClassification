@@ -87,7 +87,7 @@ class ConfusionMatrix():
                 dim=1)  # values and indices, [batch_size]
             # True: index = class_index, False: index != class_index
             batch_size = targets.size(0)
-            C_expand = torch.tensor(self.class_index).expand_as(targets)
+            C_expand = torch.tensor(self.class_index).expand_as(targets).cuda()
             AP_bools = targets.eq(C_expand)  # Boolean[batch_size]
             AN_bools = AP_bools.logical_not()
             PP_bools = indices.eq(C_expand)  # Boolean[batch_size]
@@ -105,10 +105,15 @@ class ConfusionMatrix():
 
             # compute accuracy, precision, recall and F1 metrics
             self.accuracy = self.TP / self.total
-            self.precision = self.TP / (self.TP + self.FP)
-            self.recall = self.TP / (self.TP + self.FN)
+            self.precision = self.TP / (self.TP + self.FP + 0.0001)
+            self.recall = self.TP / (self.TP + self.FN + 0.0001)
             self.f1 = 2 * self.precision * self.recall / (self.precision +
-                                                          self.recall)
+                                                          self.recall + 0.0001)
+
+    @staticmethod
+    def update_all(confusion_matrices, outputs, targets):
+        for cmatrix in confusion_matrices:
+            cmatrix.update(outputs, targets)
 
     def __str__(self):
         """
