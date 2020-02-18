@@ -69,6 +69,7 @@ class ConfusionMatrix():
         self.FP = 0
         self.FN = 0
         self.TN = 0
+        self.total = 0
         self.accuracy = 0
         self.precision = 0
         self.recall = 0
@@ -83,29 +84,58 @@ class ConfusionMatrix():
             targets: Tensor, ground-truth targets, [batch_size]
         """
         with torch.no_grad():
-            values, indices = outputs.max(dim=1)  # values and indices, [batch_size]
+            values, indices = outputs.max(
+                dim=1)  # values and indices, [batch_size]
             # True: index = class_index, False: index != class_index
             batch_size = targets.size(0)
             C_expand = torch.tensor(self.class_index).expand_as(targets)
-            AP_bools = targets.eq(C_expand)     # Boolean[batch_size]
+            AP_bools = targets.eq(C_expand)  # Boolean[batch_size]
             AN_bools = AP_bools.logical_not()
-            PP_bools = indices.eq(C_expand)     # Boolean[batch_size]
+            PP_bools = indices.eq(C_expand)  # Boolean[batch_size]
             PN_bools = PP_bools.logical_not()
 
             # compute ConfusionMatrix
-            self.TP = PP_bools.eq(AP_bools).int().sum().item()
-            self.FP = PP_bools.eq(AN_bools).int().sum().item()
-            self.FN = PN_bools.eq(AP_bools).int().sum().item()
-            self.TN = PN_bools.eq(AN_bools).int().sum().item()
+            # torch.mul computes logical AND for BoolTensor
+            self.TP = PP_bools.mul(AP_bools).int().sum().item()
+            self.FP = PP_bools.mul(AN_bools).int().sum().item()
+            self.FN = PN_bools.mul(AP_bools).int().sum().item()
+            self.TN = PN_bools.mul(AN_bools).int().sum().item()
+            self.total = self.TP + self.FP + self.FN + self.TN
 
-            # TODO: debug the error in this assertion
-            assert batch_size == self.TP + self.FP + self.FN + self.TN
+            assert batch_size == self.total
 
             # compute accuracy, precision, recall and F1 metrics
-            self.accuracy = self.TP / batch_size
+            self.accuracy = self.TP / self.total
             self.precision = self.TP / (self.TP + self.FP)
             self.recall = self.TP / (self.TP + self.FN)
-            self.f1 = 2 * self.precision * self.recall / (self.precision + self.recall)
+            self.f1 = 2 * self.precision * self.recall / (self.precision +
+                                                          self.recall)
+
+    def __str__(self):
+        """
+        Output the Confusion Matrix in format string
+
+        e.g.
+
+        ```
+        Confusion Matrix of class 0
+                AP      AN      Sum
+        PP      16      15      31
+        PN      31      66      97
+        Sum     47      81
+        Total: 128
+        ```
+        """
+        cm_title = f'Confusion Matrix of class {self.class_index}'
+        cm_line1 = f"\tAP\tAN\tSum"
+        cm_line2 = f"PP\t{self.TP}\t{self.FP}\t{self.TP+self.FP}"
+        cm_line3 = f"PN\t{self.FN}\t{self.TN}\t{self.FN+self.TN}"
+        cm_line4 = f"Sum\t{self.TP+self.FN}\t{self.FP+self.TN}"
+        cm_caption = f"Total: {self.total}"
+
+        cm_str = '\n'.join(
+            [cm_title, cm_line1, cm_line2, cm_line3, cm_line4, cm_caption])
+        return cm_str
 
     def get_accuracy(self):
         """
@@ -158,16 +188,23 @@ class ConfusionMatrix():
         # self.f1 = 2 * self.precision * self.recall / (self.precision + self.recall)
 
         return self.f1
-        
 
+
+# Unit Test
 if __name__ == "__main__":
-    batch_size = 8
+    batch_size = 16  # if batch_size, it is highly possible to encounter division-by-zero error (precision, recall, F1)
     class_count = 3
 
     outputs = torch.rand(batch_size, class_count)
     targets = torch.randint(0, class_count, [batch_size])
 
+    print(f'Outputs: {outputs}')
+    print(f'Targets: {targets}')
+
     cm0 = ConfusionMatrix(0)
     cm0.update(outputs, targets)
+    print(cm0)
 
-    print(f'Acc={cm0.accuracy}, Prec={cm0.precision}, Recall={cm0.recall}, F1={cm0.f1}')
+    print(
+        f'Acc={cm0.accuracy}, Prec={cm0.precision}, Recall={cm0.recall}, F1={cm0.f1}'
+    )
