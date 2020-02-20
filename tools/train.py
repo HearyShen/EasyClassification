@@ -134,8 +134,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         num_workers=dataload_workers,
         pin_memory=True)
 
-    localtime = helpers.readable_time()
-    print(f'Start training at {localtime}')
+    print(f'Start training at {helpers.readable_time()}')
     epoch_time = helpers.AverageMeter('Tepoch', ':.3f', 's')
     total_epoch = cfgs.getint('learning', 'epochs')
     for epoch in range(start_epoch, total_epoch):

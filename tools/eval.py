@@ -86,7 +86,6 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     task = importlib.import_module('easycls.datasets.' + taskname)
 
     # prepare dataset and dataloader
-    tic = time.time()
     val_dataset = task.get_val_dataset(cfgs)
     val_loader = torch.utils.data.DataLoader(
         val_dataset,
@@ -94,10 +93,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         shuffle=False,
         num_workers=cfgs.getint('learning', 'dataload-workers'),
         pin_memory=True)
-    toc = time.time()
-    print(f'Validation set loaded in {(toc-tic):.3f}s')
 
-    tic = time.time()
     test_dataset = task.get_test_dataset(cfgs)
     test_loader = torch.utils.data.DataLoader(
         test_dataset,
@@ -105,10 +101,8 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         shuffle=False,
         num_workers=cfgs.getint('learning', 'dataload-workers'),
         pin_memory=True)
-    toc = time.time()
-    print(f'Test set loaded in {(toc-tic):.3f}s')
 
-    print('Evaluate')
+    print(f'Start Evaluating at {helpers.readable_time()}')
     print(f'Evaluating on Validation set:')
     val_acc1, val_acc5 = apis.validate(val_loader, model, criterion, args, cfgs)
     print(f'[Val] Acc1: {val_acc1:.2f}%\tAcc5: {val_acc5:.2f}%')
