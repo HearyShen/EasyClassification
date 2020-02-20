@@ -104,10 +104,10 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
 
     print(f'Start Evaluating at {helpers.readable_time()}')
     print(f'Evaluating on Validation set:')
-    val_acc1, val_acc5 = apis.validate(val_loader, model, criterion, args, cfgs)
+    val_acc1, val_acc5, val_cms = apis.validate(val_loader, model, criterion, args, cfgs)
     print(f'[Val] Acc1: {val_acc1:.2f}%\tAcc5: {val_acc5:.2f}%')
     print(f'Evaluating on Test Set:')
-    test_acc1, test_acc5 = apis.validate(test_loader, model, criterion, args, cfgs)
+    test_acc1, test_acc5, test_cms = apis.validate(test_loader, model, criterion, args, cfgs)
     print(f'[Test] Acc1: {test_acc1:.2f}%\tAcc5: {test_acc5:.2f}%')
     return
 

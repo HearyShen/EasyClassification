@@ -4,6 +4,21 @@ import torch
 from ..helpers import AverageMeter, ProgressMeter, accuracy, ConfusionMatrix
 
 def validate(val_loader, model, criterion, args, cfgs):
+    """
+    Validate the model's performance
+
+    Args:
+        val_loader: DataLoader, loading data for validation
+        model: PyTorch model, model to be validated
+        criterion: loss function
+        args: ArgumentParser, arguments from commandline inputs
+        cfgs: ConfigParser, configurations from config file
+
+    Returns:
+        top-1 accuracy
+        top-5 accuracy
+        confusion matrices
+    """
     batch_time = AverageMeter('Time', ':6.3f', 's')
     losses = AverageMeter('Loss', ':.4e')
     top1 = AverageMeter('Acc@1', ':6.2f', '%')
@@ -44,9 +59,4 @@ def validate(val_loader, model, criterion, args, cfgs):
             if i % args.print_freq == 0:
                 progress.display(i)
 
-        # print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
-        #       .format(top1=top1, top5=top5))
-        for cm in confusion_matrices:
-            print(cm)
-
-    return top1.avg, top5.avg
+    return top1.avg, top5.avg, confusion_matrices
