@@ -74,7 +74,7 @@ class ConfusionMatrix():
         self.recall = 0
         self.f1 = 0
 
-    def update(self, outputs, targets):
+    def update(self, outputs:torch.Tensor, targets):
         """
         Update the class's confusion matrix
 
@@ -87,7 +87,7 @@ class ConfusionMatrix():
                 dim=1)  # values and indices, [batch_size]
             # True: index = class_index, False: index != class_index
             batch_size = targets.size(0)
-            C_expand = torch.tensor(self.class_index).expand_as(targets).cuda()
+            C_expand = torch.tensor(self.class_index).expand_as(targets).to(outputs.device)
             AP_bools = targets.eq(C_expand)  # Boolean[batch_size]
             AN_bools = AP_bools.logical_not()
             PP_bools = indices.eq(C_expand)  # Boolean[batch_size]
@@ -95,13 +95,11 @@ class ConfusionMatrix():
 
             # compute ConfusionMatrix
             # torch.mul computes logical AND for BoolTensor
-            self.TP = PP_bools.mul(AP_bools).int().sum().item()
-            self.FP = PP_bools.mul(AN_bools).int().sum().item()
-            self.FN = PN_bools.mul(AP_bools).int().sum().item()
-            self.TN = PN_bools.mul(AN_bools).int().sum().item()
+            self.TP += PP_bools.mul(AP_bools).int().sum().item()
+            self.FP += PP_bools.mul(AN_bools).int().sum().item()
+            self.FN += PN_bools.mul(AP_bools).int().sum().item()
+            self.TN += PN_bools.mul(AN_bools).int().sum().item()
             self.total = self.TP + self.FP + self.FN + self.TN
-
-            assert batch_size == self.total
 
             # compute accuracy, precision, recall and F1 metrics
             self.accuracy = self.TP / self.total
@@ -135,7 +133,7 @@ class ConfusionMatrix():
         cm_line2 = f"PP\t{self.TP}\t{self.FP}\t{self.TP+self.FP}"
         cm_line3 = f"PN\t{self.FN}\t{self.TN}\t{self.FN+self.TN}"
         cm_line4 = f"Sum\t{self.TP+self.FN}\t{self.FP+self.TN}"
-        cm_caption = f"Total: {self.total}"
+        cm_caption = f"Total: {self.total}\tAcc={self.accuracy*100:.3f}%\tPrec={self.precision*100:.3f}%\tRec={self.recall*100:.3f}%\tF1={self.f1:.3f}"
 
         cm_str = '\n'.join(
             [cm_title, cm_line1, cm_line2, cm_line3, cm_line4, cm_caption])
@@ -199,8 +197,8 @@ if __name__ == "__main__":
     batch_size = 16  # if batch_size, it is highly possible to encounter division-by-zero error (precision, recall, F1)
     class_count = 3
 
-    outputs = torch.rand(batch_size, class_count)
-    targets = torch.randint(0, class_count, [batch_size])
+    outputs = torch.rand(batch_size, class_count).cuda()
+    targets = torch.randint(0, class_count, [batch_size]).cuda()
 
     print(f'Outputs: {outputs}')
     print(f'Targets: {targets}')
