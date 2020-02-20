@@ -74,20 +74,24 @@ class ConfusionMatrix():
         self.recall = 0
         self.f1 = 0
 
-    def update(self, outputs:torch.Tensor, targets):
+    def update(self, outputs: torch.Tensor, targets: torch.Tensor):
         """
         Update the class's confusion matrix
 
         Args:
             outputs: Tensor, model's outputs, [batch_size, model_output_size]
             targets: Tensor, ground-truth targets, [batch_size]
+        
+        Returns:
+            the updated instance
         """
         with torch.no_grad():
             values, indices = outputs.max(
                 dim=1)  # values and indices, [batch_size]
             # True: index = class_index, False: index != class_index
             batch_size = targets.size(0)
-            C_expand = torch.tensor(self.class_index).expand_as(targets).to(outputs.device)
+            C_expand = torch.tensor(self.class_index).expand_as(targets).to(
+                outputs.device)
             AP_bools = targets.eq(C_expand)  # Boolean[batch_size]
             AN_bools = AP_bools.logical_not()
             PP_bools = indices.eq(C_expand)  # Boolean[batch_size]
@@ -108,10 +112,25 @@ class ConfusionMatrix():
             self.f1 = 2 * self.precision * self.recall / (self.precision +
                                                           self.recall + 0.0001)
 
+        return self
+
     @staticmethod
     def update_all(confusion_matrices, outputs, targets):
+        """
+        Update all the confusion matrices with model's outputs and targets
+        """
         for cmatrix in confusion_matrices:
             cmatrix.update(outputs, targets)
+
+        return confusion_matrices
+
+    @staticmethod
+    def print_all(confusion_matrices):
+        """
+        Print all the confusion matrices
+        """
+        for cmatrix in confusion_matrices:
+            print(cmatrix)
 
     def __str__(self):
         """
