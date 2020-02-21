@@ -125,6 +125,15 @@ class ConfusionMatrix():
         return confusion_matrices
 
     @staticmethod
+    def str_all(confusion_matrices):
+        """
+        Convert all the confusion matrices to string
+        """
+        cms_str = '\n'.join([str(cm) for cm in confusion_matrices])
+        
+        return cms_str
+
+    @staticmethod
     def print_all(confusion_matrices):
         """
         Print all the confusion matrices

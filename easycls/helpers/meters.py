@@ -1,3 +1,5 @@
+from .logs import init_module_logger
+
 class AverageMeter(object):
     """
     Computes and stores the count, sum, average and current value

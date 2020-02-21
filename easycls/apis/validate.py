@@ -1,7 +1,9 @@
 import time
 import torch
 
-from ..helpers import AverageMeter, ProgressMeter, accuracy, ConfusionMatrix
+from ..helpers import AverageMeter, ProgressMeter, accuracy, ConfusionMatrix, init_module_logger
+
+logger = init_module_logger(__name__)
 
 def validate(val_loader, model, criterion, args, cfgs):
     """
@@ -57,6 +59,7 @@ def validate(val_loader, model, criterion, args, cfgs):
             end = time.time()
 
             if i % args.print_freq == 0:
-                progress.display(i)
+                # progress.display(i)
+                logger.debug(progress.batch_str(i))
 
     return top1.avg, top5.avg, confusion_matrices

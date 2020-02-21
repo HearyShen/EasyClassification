@@ -1,5 +1,7 @@
 import time
-from ..helpers import AverageMeter, ProgressMeter, accuracy
+from ..helpers import AverageMeter, ProgressMeter, accuracy, init_module_logger
+
+logger = init_module_logger(__name__)
 
 def train(train_loader, model, criterion, optimizer, epoch, args):
     batch_time = AverageMeter('Tbatch', ':6.3f', 's')
@@ -42,4 +44,5 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         end = time.time()
 
         if i % args.print_freq == 0:
-            progress.display(i)
+            # progress.display(i)
+            logger.debug(progress.batch_str(i))

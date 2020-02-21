@@ -49,39 +49,41 @@ def main():
 
 
 def worker(args: ArgumentParser, cfgs: ConfigParser):
+    # init logger
+    taskname = cfgs.get('data', 'task')
+    logger = helpers.init_root_logger(filename=f"{taskname}_eval_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log")
+    logger.info(f'Current task (dataset): {taskname}')
+
     # create model
     arch = cfgs.get('model', 'arch')
     if cfgs.getboolean('model', 'pretrained'):
-        print("=> using pre-trained model '{}'".format(arch))
+        logger.info(f"Using pre-trained model '{arch}'")
         model = models.__dict__[arch](pretrained=True)
     else:
-        print("=> creating model '{}'".format(arch))
+        logger.info(f"Creating model '{arch}'")
         model = models.__dict__[arch]()
 
     # use DataParallel to allocate batch data and replicate model to all available GPUs
-    print("using DataParallel on CUDA")
+    logger.info("Using DataParallel on CUDA")
     model = torch.nn.DataParallel(model).cuda()
 
+    # create loss criterion
     criterion = torch.nn.CrossEntropyLoss().cuda()
 
     # resume as specified
     if args.resume:
         if os.path.isfile(args.resume):
-            print("=> loading checkpoint '{}'".format(args.resume))
+            logger.info(f"Loading checkpoint '{args.resume}'")
             checkpoint = torch.load(args.resume)
             model.load_state_dict(checkpoint['state_dict'])
-            print("=> loaded checkpoint '{}' (epoch {})".format(
-                args.resume, checkpoint['epoch']))
+            logger.info(f"Loaded checkpoint '{args.resume}' (epoch {checkpoint['epoch']})")
         else:
-            print("=> no checkpoint found at '{}'".format(args.resume))
+            logger.error(f"No checkpoint found at '{args.resume}'")
 
     # speedup for batches with fixed-size input
     cudnn.benchmark = cfgs.getboolean('learning', 'cudnn-benchmark')
 
     # load dataset for specific task
-    taskname = cfgs.get('data', 'task')
-    print(f'current task (dataset) => {taskname}')
-
     # run-time import dataset according to task in config
     task = importlib.import_module('easycls.datasets.' + taskname)
 
@@ -102,13 +104,15 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         num_workers=cfgs.getint('learning', 'dataload-workers'),
         pin_memory=True)
 
-    print(f'Start Evaluating at {helpers.readable_time()}')
-    print(f'Evaluating on Validation set:')
+    logger.info(f'Start Evaluating at {helpers.readable_time()}')
+    logger.info(f'Evaluating on Validation set:')
     val_acc1, val_acc5, val_cms = apis.validate(val_loader, model, criterion, args, cfgs)
-    print(f'[Val] Acc1: {val_acc1:.2f}%\tAcc5: {val_acc5:.2f}%')
-    print(f'Evaluating on Test Set:')
+    logger.info(f'[Val] Acc1: {val_acc1:.2f}%,\tAcc5: {val_acc5:.2f}%')
+    logger.info(helpers.ConfusionMatrix.str_all(val_cms))
+    logger.info(f'Evaluating on Test Set:')
     test_acc1, test_acc5, test_cms = apis.validate(test_loader, model, criterion, args, cfgs)
-    print(f'[Test] Acc1: {test_acc1:.2f}%\tAcc5: {test_acc5:.2f}%')
+    logger.info(f'[Test] Acc1: {test_acc1:.2f}%,\tAcc5: {test_acc5:.2f}%')
+    logger.info(helpers.ConfusionMatrix.str_all(test_cms))
     return
 
 if __name__ == "__main__":
