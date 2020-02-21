@@ -1,6 +1,30 @@
 import time
 import datetime
 
+def format_time(timestamp=time.time(), format=r"%Y%m%d_%H%M%S"):
+    """
+    Return a formatted time string
+
+    Commonly used format codes:
+
+    %Y Year with century as a decimal number. 
+    %m Month as a decimal number [01,12]. 
+    %d Day of the month as a decimal number [01,31]. 
+    %H Hour (24-hour clock) as a decimal number [00,23]. 
+    %M Minute as a decimal number [00,59]. 
+    %S Second as a decimal number [00,61]. 
+    %z Time zone offset from UTC. 
+    %a Locale's abbreviated weekday name. 
+    %A Locale's full weekday name. 
+    %b Locale's abbreviated month name. 
+    %B Locale's full month name. 
+    %c Locale's appropriate date and time representation. s
+    %I Hour (12-hour clock) as a decimal number [01,12]. 
+    %p Locale's equivalent of either AM or PM.
+    """
+    time_str = time.strftime(format, time.localtime(timestamp))
+    return time_str
+
 
 def readable_time(timestamp=time.time()):
     """
@@ -46,6 +70,7 @@ def readable_eta(seconds_left):
 if __name__ == "__main__":
     ts = time.time()
     print(f'Timestamp: {ts} -> {readable_time(ts)}')
+    print(f'format time: {format_time(ts)}')
 
     seconds_left = 3600 * 25 + 90
     eta, Tleft = readable_eta(seconds_left)

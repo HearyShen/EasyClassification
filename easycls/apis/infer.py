@@ -1,6 +1,6 @@
 from ..helpers import logs
 
-logger = logs.init_module_logger()
+logger = logs.init_module_logger(__name__)
 
 def func():
     logger.debug('debug...')

@@ -1,7 +1,7 @@
 import logging
 
 
-def init_module_logger():
+def init_module_logger(name=None):
     """
     Init a logger for the a module.
 
@@ -11,7 +11,7 @@ def init_module_logger():
 
     ```python
     from ..helpers import logs
-    logger = logs.init_module_logger()
+    logger = logs.init_module_logger(__name__)
 
     def func():
         logger.debug('debug...')
@@ -39,6 +39,6 @@ def init_module_logger():
     CRITICAL:easycls.helpers.logs:critical...
     ```
     """
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(name)
     logger.addHandler(logging.NullHandler())
     return logger
