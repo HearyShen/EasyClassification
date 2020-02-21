@@ -18,7 +18,7 @@ def format_time(timestamp=time.time(), format=r"%Y%m%d_%H%M%S"):
     %A Locale's full weekday name. 
     %b Locale's abbreviated month name. 
     %B Locale's full month name. 
-    %c Locale's appropriate date and time representation. s
+    %c Locale's appropriate date and time representation. 
     %I Hour (12-hour clock) as a decimal number [01,12]. 
     %p Locale's equivalent of either AM or PM.
     """
