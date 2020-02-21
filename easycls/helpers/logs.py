@@ -1,9 +1,13 @@
 import logging
+from .times import format_time
+
+DEFAULT_FORMAT = r'[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s'
+DEFAULT_DATE_FORMAT = r'%Y-%m-%d %H:%M:%S'
 
 
 def init_module_logger(name=None):
     """
-    Init a logger for the a module.
+    Initialize a logger for the a module.
 
     Usage:
 
@@ -41,4 +45,88 @@ def init_module_logger(name=None):
     """
     logger = logging.getLogger(name)
     logger.addHandler(logging.NullHandler())
+    return logger
+
+
+mlogger = init_module_logger(__name__)
+
+
+def init_basic_root_logger(level=logging.INFO):
+    """
+    Initialize the root logger with basic configuration.
+    """
+    logging.basicConfig()
+    logger = logging.getLogger()  # get root logger as default
+    logger.setLevel(level)
+
+    return logger
+
+
+def add_file_log(logger=logging.getLogger(),
+                 filename=f'{format_time(format=r"%Y%m%d_%H%M%S")}.log',
+                 level=logging.INFO,
+                 format=DEFAULT_FORMAT,
+                 dateformat=DEFAULT_DATE_FORMAT):
+    """
+    Add a logging.FileHandler instance to logger, output logs to file.
+    """
+    formatter = logging.Formatter(fmt=format, datefmt=dateformat)
+
+    file_handler = logging.FileHandler(filename)
+    file_handler.setLevel(level)
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+
+    return logger
+
+
+def add_stream_log(logger=logging.getLogger(),
+                   level=logging.DEBUG,
+                   format=DEFAULT_FORMAT,
+                   dateformat=DEFAULT_DATE_FORMAT):
+    """
+    Add a logging.StreamHandler instance to logger, output logs to screen.
+    """
+    formatter = logging.Formatter(fmt=format, datefmt=dateformat)
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(level)
+    stream_handler.setFormatter(formatter)
+
+    logger.addHandler(stream_handler)
+
+    return logger
+
+
+def init_root_logger(filename=f'{format_time(format=r"%Y%m%d_%H%M%S")}.log',
+                     level=logging.DEBUG,
+                     format=DEFAULT_FORMAT,
+                     dateformat=DEFAULT_DATE_FORMAT):
+    """
+    Initialize the root logger with file-and-screen outputs configuration.
+
+    Usage:
+
+    ```
+    import easycls.helpers as helpers
+
+    logger = helpers.init_root_logger()
+    ```
+    """
+    logger = logging.getLogger()  # get root logger as default
+    logger.setLevel(logging.NOTSET)  # do not reject any handlers logs
+
+    add_file_log(logger=logger,
+                 filename=filename,
+                 level=level,
+                 format=format,
+                 dateformat=dateformat)
+    add_stream_log(logger=logger,
+                   level=level,
+                   format=format,
+                   dateformat=dateformat)
+    mlogger.info(
+        f"Root logger initialized with file({filename}) and stream output")
+
     return logger
