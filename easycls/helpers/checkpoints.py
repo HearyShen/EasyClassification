@@ -22,7 +22,7 @@ def save_checkpoint(obj, is_best, filename="model"):
     # copy best checkpoint
     if is_best:
         best_ckpt_filename = filename + BEST_CKPT_EXT
-        shutil.copyfile(filename, best_ckpt_filename)
+        shutil.copyfile(latest_ckpt_filename, best_ckpt_filename)
         logger.info(f"Best checkpoint saved to {best_ckpt_filename}")
 
 def load_checkpoint(filename, map_location=None):
