@@ -82,7 +82,7 @@ def add_file_log(logger=logging.getLogger(),
 
 
 def add_stream_log(logger=logging.getLogger(),
-                   level=logging.DEBUG,
+                   level=logging.INFO,
                    format=DEFAULT_FORMAT,
                    dateformat=DEFAULT_DATE_FORMAT):
     """
@@ -101,7 +101,7 @@ def add_stream_log(logger=logging.getLogger(),
 
 def init_root_logger(filename=f'{format_time(format=r"%Y%m%d_%H%M%S")}.log',
                      flog_level=logging.INFO,
-                     slog_level=logging.DEBUG,
+                     slog_level=logging.INFO,
                      format=DEFAULT_FORMAT,
                      dateformat=DEFAULT_DATE_FORMAT):
     """

@@ -58,7 +58,7 @@ def validate(val_loader, model, criterion, args, cfgs):
             batch_time.update(time.time() - end)
             end = time.time()
 
-            if i % args.print_freq == 0:
-                logger.debug(progress.batch_str(i))
+            if i % args.log_freq == 0:
+                logger.info(progress.batch_str(i))
 
     return top1.avg, top5.avg, confusion_matrices

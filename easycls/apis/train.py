@@ -43,5 +43,5 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         batch_time.update(time.time() - end)
         end = time.time()
 
-        if i % args.print_freq == 0:
-            logger.debug(progress.batch_str(i))
+        if i % args.log_freq == 0:
+            logger.info(progress.batch_str(i))
