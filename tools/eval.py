@@ -53,23 +53,22 @@ def main():
 def worker(args: ArgumentParser, cfgs: ConfigParser):
     # init logger
     taskname = cfgs.get('data', 'task')
+    arch = cfgs.get('model', 'arch')
     logger = helpers.init_root_logger(
         filename=
-        f"{taskname}_eval_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log")
+        f"{taskname}_{arch}_eval_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log")
     logger.info(f'Current task (dataset): {taskname}')
 
+    # init test
+    helpers.check_cuda()
+    
     # create model
-    arch = cfgs.get('model', 'arch')
     if cfgs.getboolean('model', 'pretrained'):
         logger.info(f"Using pre-trained model '{arch}'")
         model = models.__dict__[arch](pretrained=True)
     else:
         logger.info(f"Creating model '{arch}'")
         model = models.__dict__[arch]()
-
-    # use DataParallel to allocate batch data and replicate model to all available GPUs
-    logger.info("Using DataParallel on CUDA")
-    model = torch.nn.DataParallel(model).cuda()
 
     # create loss criterion
     criterion = torch.nn.CrossEntropyLoss().cuda()
@@ -85,6 +84,10 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
             logger.info(
                 f"Loaded checkpoint '{args.resume}' (epoch: {checkpoint['epoch']}, time: {helpers.readable_time(checkpoint['timestamp'])})"
             )
+
+    # use DataParallel to allocate batch data and replicate model to all available GPUs
+    logger.info("Using DataParallel on CUDA")
+    model = torch.nn.DataParallel(model).cuda()
 
     # speedup for batches with fixed-size input
     cudnn.benchmark = cfgs.getboolean('learning', 'cudnn-benchmark')

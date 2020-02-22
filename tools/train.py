@@ -62,8 +62,12 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     arch = cfgs.get('model', 'arch')
     logger = helpers.init_root_logger(
         filename=
-        f"{taskname}_{arch}_train_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log")
+        f"{taskname}_{arch}_train_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log"
+    )
     logger.info(f'Current task (dataset): {taskname}')
+
+    # init test
+    helpers.check_cuda()
 
     # create model
     if cfgs.getboolean('model', 'pretrained'):
@@ -72,10 +76,6 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     else:
         logger.info(f"Creating model '{arch}'")
         model = models.__dict__[arch]()
-
-    # use DataParallel to allocate batch data and replicate model to all available GPUs
-    logger.info("Using DataParallel on CUDA")
-    model = torch.nn.DataParallel(model).cuda()
 
     # define loss function (criterion) and optimizer
     lr = cfgs.getfloat('learning', 'learning-rate')
@@ -102,6 +102,10 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
             logger.info(
                 f"Loaded checkpoint '{args.resume}' (epoch: {checkpoint['epoch']}, time: {helpers.readable_time(checkpoint['timestamp'])})"
             )
+
+    # use DataParallel to allocate batch data and replicate model to all available GPUs
+    logger.info("Using DataParallel on CUDA")
+    model = torch.nn.DataParallel(model).cuda()
 
     # speedup for batches with fixed-size input
     cudnn.benchmark = cfgs.getboolean('learning', 'cudnn-benchmark')
@@ -168,18 +172,21 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
             {
                 'arch': arch,
                 'epoch': epoch + 1,
-                'state_dict': model.state_dict(),
+                'state_dict': model.module.state_dict(
+                ),  # To save a DataParallel model generically, save the model.module.state_dict().
                 'best_acc1': best_acc1,
                 'optimizer': optimizer.state_dict(),
                 'timestamp': time.time()
-            }, is_best, f"{taskname}_{arch}")
+            },
+            is_best,
+            f"{taskname}_{arch}")
 
         # measure the elapsed time
         toc = time.time()
         epoch_time.update(toc - tic)
         eta_time, time_left = helpers.readable_eta(epoch_time.avg *
                                                    (total_epoch - epoch - 1))
-        logger.debug(f'{epoch_time}\tETA: {eta_time} (in {time_left})')
+        logger.info(f'{epoch_time}\tETA: {eta_time} (in {time_left})')
 
 
 if __name__ == "__main__":
