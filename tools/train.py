@@ -21,6 +21,7 @@ def parse_args():
     argparser = ArgumentParser(description="EasyClassification")
     argparser.add_argument('-c',
                            '--config',
+                           default='config.ini',
                            type=str,
                            metavar='PATH',
                            help='configuration file path')
@@ -30,12 +31,12 @@ def parse_args():
                            type=str,
                            metavar='PATH',
                            help='resume checkpoint file path(default: none)')
-    argparser.add_argument('-p',
-                           '--print-freq',
+    argparser.add_argument('-l',
+                           '--log-freq',
                            default=10,
                            type=int,
                            metavar='N',
-                           help='print frequency (default: 10)')
+                           help='log frequency (default: 10)')
     args = argparser.parse_args()
     return args
 
@@ -58,13 +59,13 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
 
     # init logger
     taskname = cfgs.get('data', 'task')
+    arch = cfgs.get('model', 'arch')
     logger = helpers.init_root_logger(
         filename=
-        f"{taskname}_train_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log")
+        f"{taskname}_{arch}_train_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log")
     logger.info(f'Current task (dataset): {taskname}')
 
     # create model
-    arch = cfgs.get('model', 'arch')
     if cfgs.getboolean('model', 'pretrained'):
         logger.info(f"Using pre-trained model '{arch}'")
         model = models.__dict__[arch](pretrained=True)

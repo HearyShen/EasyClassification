@@ -20,6 +20,7 @@ def parse_args():
     argparser = ArgumentParser(description="EasyClassification")
     argparser.add_argument('-c',
                            '--config',
+                           default='config.ini',
                            type=str,
                            metavar='PATH',
                            help='configuration file path')
@@ -29,12 +30,12 @@ def parse_args():
                            type=str,
                            metavar='PATH',
                            help='resume checkpoint file path(default: none)')
-    argparser.add_argument('-p',
-                           '--print-freq',
+    argparser.add_argument('-l',
+                           '--log-freq',
                            default=10,
                            type=int,
                            metavar='N',
-                           help='print frequency (default: 10)')
+                           help='log frequency (default: 10)')
     args = argparser.parse_args()
     return args
 

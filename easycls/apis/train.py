@@ -44,5 +44,4 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         end = time.time()
 
         if i % args.print_freq == 0:
-            # progress.display(i)
             logger.debug(progress.batch_str(i))
