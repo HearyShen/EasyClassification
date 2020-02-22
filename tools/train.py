@@ -89,20 +89,18 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     # resume as specified
     start_epoch = 0
     if args.resume:
-        if os.path.isfile(args.resume):
-            logger.info(f"Loading checkpoint '{args.resume}'")
-
-            checkpoint = torch.load(args.resume)
-
+        try:
+            checkpoint = helpers.load_checkpoint(args.resume)
+        except FileNotFoundError as error:
+            logger.error(f"No checkpoint found at '{args.resume}'")
+        else:
             start_epoch = checkpoint['epoch']
             best_acc1 = checkpoint['best_acc1']
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             logger.info(
-                f"Loaded checkpoint '{args.resume}' (epoch {checkpoint['epoch']})"
+                f"Loaded checkpoint '{args.resume}' (epoch: {checkpoint['epoch']}, time: {helpers.readable_time(checkpoint['timestamp'])})"
             )
-        else:
-            logger.info(f"No checkpoint found at '{args.resume}'")
 
     # speedup for batches with fixed-size input
     cudnn.benchmark = cfgs.getboolean('learning', 'cudnn-benchmark')
@@ -165,7 +163,6 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         # remember best acc@1 and save checkpoint
         is_best = val_acc1 > best_acc1
         best_acc1 = max(val_acc1, best_acc1)
-
         helpers.save_checkpoint(
             {
                 'arch': arch,
@@ -173,7 +170,8 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
                 'state_dict': model.state_dict(),
                 'best_acc1': best_acc1,
                 'optimizer': optimizer.state_dict(),
-            }, is_best, arch)
+                'timestamp': time.time()
+            }, is_best, f"{taskname}_{arch}")
 
         # measure the elapsed time
         toc = time.time()

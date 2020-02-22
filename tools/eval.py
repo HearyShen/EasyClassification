@@ -8,7 +8,8 @@ import torch.backends.cudnn as cudnn
 
 # insert root dir path to sys.path to import easycls
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+sys.path.insert(0,
+                os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 import easycls.apis as apis
 import easycls.models as models
@@ -51,7 +52,9 @@ def main():
 def worker(args: ArgumentParser, cfgs: ConfigParser):
     # init logger
     taskname = cfgs.get('data', 'task')
-    logger = helpers.init_root_logger(filename=f"{taskname}_eval_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log")
+    logger = helpers.init_root_logger(
+        filename=
+        f"{taskname}_eval_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log")
     logger.info(f'Current task (dataset): {taskname}')
 
     # create model
@@ -72,13 +75,15 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
 
     # resume as specified
     if args.resume:
-        if os.path.isfile(args.resume):
-            logger.info(f"Loading checkpoint '{args.resume}'")
-            checkpoint = torch.load(args.resume)
-            model.load_state_dict(checkpoint['state_dict'])
-            logger.info(f"Loaded checkpoint '{args.resume}' (epoch {checkpoint['epoch']})")
-        else:
+        try:
+            checkpoint = helpers.load_checkpoint(args.resume)
+        except FileNotFoundError as error:
             logger.error(f"No checkpoint found at '{args.resume}'")
+        else:
+            model.load_state_dict(checkpoint['state_dict'])
+            logger.info(
+                f"Loaded checkpoint '{args.resume}' (epoch: {checkpoint['epoch']}, time: {helpers.readable_time(checkpoint['timestamp'])})"
+            )
 
     # speedup for batches with fixed-size input
     cudnn.benchmark = cfgs.getboolean('learning', 'cudnn-benchmark')
@@ -106,14 +111,16 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
 
     logger.info(f'Start Evaluating at {helpers.readable_time()}')
     logger.info(f'Evaluating on Validation set:')
-    val_acc1, val_acc5, val_cms = apis.validate(val_loader, model, criterion, args, cfgs)
+    val_acc1, val_acc5, val_cms = apis.validate(val_loader, model, criterion,
+                                                args, cfgs)
     logger.info(f'[Val] Acc1: {val_acc1:.2f}%,\tAcc5: {val_acc5:.2f}%')
-    logger.info(helpers.ConfusionMatrix.str_all(val_cms))
+    # logger.info(helpers.ConfusionMatrix.str_all(val_cms))
     logger.info(f'Evaluating on Test Set:')
-    test_acc1, test_acc5, test_cms = apis.validate(test_loader, model, criterion, args, cfgs)
+    test_acc1, test_acc5, test_cms = apis.validate(test_loader, model,
+                                                   criterion, args, cfgs)
     logger.info(f'[Test] Acc1: {test_acc1:.2f}%,\tAcc5: {test_acc5:.2f}%')
-    logger.info(helpers.ConfusionMatrix.str_all(test_cms))
-    return
+    # logger.info(helpers.ConfusionMatrix.str_all(test_cms))
+
 
 if __name__ == "__main__":
     main()
