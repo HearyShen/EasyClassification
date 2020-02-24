@@ -5,21 +5,21 @@ sys.path.insert(0,
                 os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 import torch
+
+import torch.optim as optim
+import torch.nn.modules.loss as loss
+
 import torchvision.models as models
+import torchvision.datasets as datasets
 
-import IPython
+def print_callable(package):
+    print([item for item in package.__dict__ if not item.startswith("_") and callable(package.__dict__[item])])
 
-model = models.resnet18()
 
-model_dp = torch.nn.DataParallel(model)
+print_callable(optim)
 
-m_para = model.parameters()
-m_dp_para = model_dp.parameters()
+print_callable(loss)
 
-# IPython.embed()
+print_callable(models)
 
-total = 62  # len(list(m_para))
-for i in range(total):
-    print(
-        f"{i}: {next(m_para) is next(m_dp_para)}"
-    )  # all True. It means DataParallel model's parameters are just reference of original model's params.
+print_callable(datasets)
