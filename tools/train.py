@@ -69,7 +69,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     arch = cfgs.get('model', 'arch')
     logger = helpers.init_root_logger(
         filename=
-        f"logs\{taskname}_{arch}_train_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log"
+        os.path.join('logs', f"{taskname}_{arch}_train_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log")
     )
     logger.info(f'Current task (dataset): {taskname}')
 
@@ -84,9 +84,8 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         logger.info(f"Creating model '{arch}'")
         model = models.__dict__[arch]()
 
-    # define loss function (criterion) and optimizer
+    # create optimizer
     lr = cfgs.getfloat('learning', 'learning-rate')
-    criterion = torch.nn.CrossEntropyLoss().to(torch.device(args.device))
     optimizer = torch.optim.SGD(model.parameters(),
                                 lr,
                                 momentum=cfgs.getfloat('learning', 'momentum'),
@@ -113,12 +112,16 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     # select the computing device (CPU or GPU) according to arguments and environment
     if args.device == 'cpu' or cuda_device_count == 0:
         model = model.cpu()
+        args.device = 'cpu'
         logger.info("Using CPU for training.")
     elif args.device == 'cuda' and cuda_device_count >= 1:
         # use DataParallel to allocate batch data and replicate model to all available GPUs
         # model = model.cuda()      # even on single-gpu node, DataParallel is still slightly falster than non-DataParallel
         model = torch.nn.DataParallel(model).cuda()
+        args.device = 'cuda'
         logger.info("Using DataParallel for GPU(s) CUDA accelerated training.")
+    # create the loss function according to model's device
+    criterion = torch.nn.CrossEntropyLoss().to(torch.device(args.device))
 
     # speedup for batches with fixed-size input
     cudnn.benchmark = cfgs.getboolean('learning', 'cudnn-benchmark')
@@ -179,6 +182,10 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         )
 
         # remember best acc@1 and save checkpoint
+        if args.device == 'cuda':
+            model_state_dict = model.module.state_dict()
+        elif args.device == 'cpu':
+            model_state_dict = model.state_dict()
         is_best = val_acc1 > best_acc1
         best_acc1 = max(val_acc1, best_acc1)
         helpers.save_checkpoint(
