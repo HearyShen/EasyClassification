@@ -14,6 +14,12 @@ def save_checkpoint(obj, is_best, filename="model"):
     """
     Save latest checkpoint and best-performance checkpoint.
     """
+
+    # create dirs if not existed
+    dirname = os.path.dirname(filename)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+
     # save latest checkpoint
     latest_ckpt_filename = filename + LATEST_CKPT_EXT
     torch.save(obj, latest_ckpt_filename)

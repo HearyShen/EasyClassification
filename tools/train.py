@@ -69,7 +69,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     arch = cfgs.get('model', 'arch')
     logger = helpers.init_root_logger(
         filename=
-        f"{taskname}_{arch}_train_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log"
+        f"logs\{taskname}_{arch}_train_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log"
     )
     logger.info(f'Current task (dataset): {taskname}')
 

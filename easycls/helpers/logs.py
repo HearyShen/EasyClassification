@@ -1,3 +1,4 @@
+import os
 import logging
 from .times import format_time
 
@@ -117,6 +118,11 @@ def init_root_logger(filename=f'{format_time(format=r"%Y%m%d_%H%M%S")}.log',
     """
     logger = logging.getLogger()  # get root logger as default
     logger.setLevel(logging.NOTSET)  # do not reject any handlers logs
+
+    # create dirs if not existed
+    dirname = os.path.dirname(filename)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
 
     add_file_log(logger=logger,
                  filename=filename,
