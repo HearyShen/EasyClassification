@@ -18,21 +18,20 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     model.train()
 
     end = time.time()
-    for i, (images, target) in enumerate(train_loader):
+    for i, (inputs, targets) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
-        target = target.cuda(non_blocking=True)
-
-        # compute output
-        output = model(images)
-        loss = criterion(output, target)
+        # compute outputs
+        outputs = model(inputs)
+        targets = targets.to(outputs.device, non_blocking=True)
+        loss = criterion(outputs, targets)
 
         # measure accuracy and record loss
-        acc1, acc5 = accuracy(output, target, topk=(1, 5))
-        losses.update(loss.item(), images.size(0))
-        top1.update(acc1*100, images.size(0))
-        top5.update(acc5*100, images.size(0))
+        acc1, acc5 = accuracy(outputs, targets, topk=(1, 5))
+        losses.update(loss.item(), inputs.size(0))
+        top1.update(acc1*100, inputs.size(0))
+        top5.update(acc5*100, inputs.size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()

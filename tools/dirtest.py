@@ -4,41 +4,22 @@ import sys
 sys.path.insert(0,
                 os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
-# from os.path import dirname, abspath, join
+import torch
+import torchvision.models as models
 
-# filename = abspath(__file__)
-# print(f'current filepath: {filename}')
+import IPython
 
-# dirpath = abspath(dirname(filename))
-# print(f'current dirpath: {dirpath}')
+model = models.resnet18()
 
-# parent_dirpath = abspath(join(dirpath, '..'))
-# print(f'parent dirpath: {parent_dirpath}')
+model_dp = torch.nn.DataParallel(model)
 
-import logging
-import easycls.helpers as helpers
-import easycls.apis.infer as infer
+m_para = model.parameters()
+m_dp_para = model_dp.parameters()
 
-# logger = logging.getLogger()  # 不加名称设置root logger
-# logger.setLevel(logging.DEBUG)
-# formatter = logging.Formatter(
-#     r'%(asctime)s - %(name)s - %(levelname)s: - %(message)s',
-#     datefmt=r'%Y-%m-%d %H:%M:%S')
+# IPython.embed()
 
-# # 使用FileHandler输出到文件
-# fh = logging.FileHandler(f'log_{helpers.format_time()}.log')
-# fh.setLevel(logging.INFO)
-# fh.setFormatter(formatter)
-
-# # 使用StreamHandler输出到屏幕
-# ch = logging.StreamHandler()
-# ch.setLevel(logging.DEBUG)
-# ch.setFormatter(formatter)
-
-# # 添加两个Handler
-# logger.addHandler(ch)
-# logger.addHandler(fh)
-
-# logging.basicConfig()
-helpers.init_root_logger()
-infer.func()
+total = 62  # len(list(m_para))
+for i in range(total):
+    print(
+        f"{i}: {next(m_para) is next(m_dp_para)}"
+    )  # all True. It means DataParallel model's parameters are just reference of original model's params.

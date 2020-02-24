@@ -39,10 +39,9 @@ def validate(val_loader, model, criterion, args, cfgs):
     with torch.no_grad():
         end = time.time()
         for i, (inputs, targets) in enumerate(val_loader):
-            targets = targets.cuda(non_blocking=True)
-
             # compute outputs
             outputs = model(inputs)
+            targets = targets.to(outputs.device, non_blocking=True)
             loss = criterion(outputs, targets)
 
             # measure accuracy and record loss
