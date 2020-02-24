@@ -30,6 +30,13 @@ def parse_args():
                            type=str,
                            metavar='PATH',
                            help='resume checkpoint file path(default: none)')
+    argparser.add_argument('-d',
+                           '--device',
+                           default='cuda',
+                           choices=('cpu', 'cuda'),
+                           type=str,
+                           metavar='DEVICE',
+                           help='computing device (default: cuda)')
     argparser.add_argument('-l',
                            '--log-freq',
                            default=10,
@@ -54,14 +61,15 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     # init logger
     taskname = cfgs.get('data', 'task')
     arch = cfgs.get('model', 'arch')
-    logger = helpers.init_root_logger(
-        filename=
-        f"{taskname}_{arch}_eval_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log")
+    logger = helpers.init_root_logger(filename=os.path.join(
+        'logs',
+        f"{taskname}_{arch}_eval_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log"
+    ))
     logger.info(f'Current task (dataset): {taskname}')
 
     # init test
-    helpers.check_cuda()
-    
+    cuda_device_count = helpers.check_cuda()
+
     # create model
     if cfgs.getboolean('model', 'pretrained'):
         logger.info(f"Using pre-trained model '{arch}'")
@@ -70,24 +78,32 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         logger.info(f"Creating model '{arch}'")
         model = models.__dict__[arch]()
 
-    # create loss criterion
-    criterion = torch.nn.CrossEntropyLoss().cuda()
-
     # resume as specified
     if args.resume:
         try:
             checkpoint = helpers.load_checkpoint(args.resume)
         except FileNotFoundError as error:
-            logger.error(f"No checkpoint found at '{args.resume}'")
+            logger.error(f"Evaluation failed, no checkpoint found at '{args.resume}'.")
+            return
         else:
             model.load_state_dict(checkpoint['state_dict'])
             logger.info(
                 f"Loaded checkpoint '{args.resume}' (epoch: {checkpoint['epoch']}, time: {helpers.readable_time(checkpoint['timestamp'])})"
             )
 
-    # use DataParallel to allocate batch data and replicate model to all available GPUs
-    logger.info("Using DataParallel on CUDA")
-    model = torch.nn.DataParallel(model).cuda()
+    # select the computing device (CPU or GPU) according to arguments and environment
+    if args.device == 'cpu' or cuda_device_count == 0:
+        model = model.cpu()
+        args.device = 'cpu'
+        logger.info("Using CPU for evaluating.")
+    elif args.device == 'cuda' and cuda_device_count >= 1:
+        # use DataParallel to allocate batch data and replicate model to all available GPUs
+        # model = model.cuda()      # even on single-gpu node, DataParallel is still slightly falster than non-DataParallel
+        model = torch.nn.DataParallel(model).cuda()
+        args.device = 'cuda'
+        logger.info("Using DataParallel for GPU(s) CUDA accelerated evaluating.")
+    # create the loss function according to model's device
+    criterion = torch.nn.CrossEntropyLoss().to(torch.device(args.device))
 
     # speedup for batches with fixed-size input
     cudnn.benchmark = cfgs.getboolean('learning', 'cudnn-benchmark')
