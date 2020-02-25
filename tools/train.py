@@ -183,7 +183,8 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
 
         # remember best acc@1 and save checkpoint
         if args.device == 'cuda':
-            model_state_dict = model.module.state_dict()
+            # To save a DataParallel model generically, save the model.module.state_dict().
+            model_state_dict = model.module.state_dict() 
         elif args.device == 'cpu':
             model_state_dict = model.state_dict()
         is_best = val_acc1 > best_acc1
@@ -192,8 +193,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
             {
                 'arch': arch,
                 'epoch': epoch + 1,
-                'state_dict': model.module.state_dict(
-                ),  # To save a DataParallel model generically, save the model.module.state_dict().
+                'state_dict': model_state_dict,
                 'best_acc1': best_acc1,
                 'optimizer': optimizer.state_dict(),
                 'timestamp': time.time()
