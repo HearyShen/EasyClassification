@@ -5,14 +5,14 @@ from ..helpers import AverageMeter, ProgressMeter, accuracy, ConfusionMatrix, in
 
 logger = init_module_logger(__name__)
 
-def validate(val_loader, model, criterion, args, cfgs):
+def validate(val_loader, model, lossfunc, args, cfgs):
     """
     Validate the model's performance
 
     Args:
         val_loader: DataLoader, loading data for validation
         model: PyTorch model, model to be validated
-        criterion: loss function
+        lossfunc: loss function
         args: ArgumentParser, arguments from commandline inputs
         cfgs: ConfigParser, configurations from config file
 
@@ -42,7 +42,7 @@ def validate(val_loader, model, criterion, args, cfgs):
             # compute outputs
             outputs = model(inputs)
             targets = targets.to(outputs.device, non_blocking=True)
-            loss = criterion(outputs, targets)
+            loss = lossfunc(outputs, targets)
 
             # measure accuracy and record loss
             acc1, acc5 = accuracy(outputs, targets, topk=(1, 5))

@@ -5,6 +5,7 @@ from configparser import ConfigParser
 import importlib
 import torch
 import torch.backends.cudnn as cudnn
+import torch.nn.modules.loss as loss
 
 # insert root dir path to sys.path to import easycls
 import sys
@@ -86,7 +87,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
             logger.error(f"Evaluation failed, no checkpoint found at '{args.resume}'.")
             return
         else:
-            model.load_state_dict(checkpoint['state_dict'])
+            model.load_state_dict(checkpoint['model_state_dict'])
             logger.info(
                 f"Loaded checkpoint '{args.resume}' (epoch: {checkpoint['epoch']}, time: {helpers.readable_time(checkpoint['timestamp'])})"
             )
@@ -102,8 +103,11 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         model = torch.nn.DataParallel(model).cuda()
         args.device = 'cuda'
         logger.info("Using DataParallel for GPU(s) CUDA accelerated evaluating.")
-    # create the loss function according to model's device
-    criterion = torch.nn.CrossEntropyLoss().to(torch.device(args.device))
+
+    # create the lossfunc(loss function)
+    lossfunc_name = cfgs.get("learning", "loss")
+    logger.info(f"Using {lossfunc_name} as Loss Function.")
+    lossfunc = loss.__dict__[lossfunc_name].to(torch.device(args.device))
 
     # speedup for batches with fixed-size input
     cudnn.benchmark = cfgs.getboolean('learning', 'cudnn-benchmark')
@@ -131,13 +135,13 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
 
     logger.info(f'Start Evaluating at {helpers.readable_time()}')
     logger.info(f'Evaluating on Validation set:')
-    val_acc1, val_acc5, val_cms = apis.validate(val_loader, model, criterion,
+    val_acc1, val_acc5, val_cms = apis.validate(val_loader, model, lossfunc,
                                                 args, cfgs)
     logger.info(f'[Val] Acc1: {val_acc1:.2f}%,\tAcc5: {val_acc5:.2f}%')
     # logger.info(helpers.ConfusionMatrix.str_all(val_cms))
     logger.info(f'Evaluating on Test Set:')
     test_acc1, test_acc5, test_cms = apis.validate(test_loader, model,
-                                                   criterion, args, cfgs)
+                                                   lossfunc, args, cfgs)
     logger.info(f'[Test] Acc1: {test_acc1:.2f}%,\tAcc5: {test_acc5:.2f}%')
     # logger.info(helpers.ConfusionMatrix.str_all(test_cms))
 

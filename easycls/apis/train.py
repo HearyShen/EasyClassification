@@ -3,7 +3,7 @@ from ..helpers import AverageMeter, ProgressMeter, accuracy, init_module_logger
 
 logger = init_module_logger(__name__)
 
-def train(train_loader, model, criterion, optimizer, epoch, args):
+def train(train_loader, model, lossfunc, optimizer, epoch, args):
     batch_time = AverageMeter('Tbatch', ':6.3f', 's')
     data_time = AverageMeter('Tdata', ':6.3f', 's')
     losses = AverageMeter('Loss', ':.4e')
@@ -25,7 +25,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         # compute outputs
         outputs = model(inputs)
         targets = targets.to(outputs.device, non_blocking=True)
-        loss = criterion(outputs, targets)
+        loss = lossfunc(outputs, targets)
 
         # measure accuracy and record loss
         acc1, acc5 = accuracy(outputs, targets, topk=(1, 5))

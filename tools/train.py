@@ -6,6 +6,7 @@ from configparser import ConfigParser
 import importlib
 import torch
 import torch.backends.cudnn as cudnn
+import torch.nn.modules.loss as loss
 
 # insert root dir path to sys.path to import easycls
 import sys
@@ -84,27 +85,18 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         logger.info(f"Creating model '{arch}'")
         model = models.__dict__[arch]()
 
-    # create optimizer
-    lr = cfgs.getfloat('learning', 'learning-rate')
-    optimizer = torch.optim.SGD(model.parameters(),
-                                lr,
-                                momentum=cfgs.getfloat('learning', 'momentum'),
-                                weight_decay=cfgs.getfloat(
-                                    'learning', 'weight-decay'))
-    logger.info(f'Learning-rate starts from {lr}')
-
     # resume as specified
     start_epoch = 0
     if args.resume:
         try:
             checkpoint = helpers.load_checkpoint(args.resume)
         except FileNotFoundError as error:
-            logger.error(f"No checkpoint found at '{args.resume}'")
+            logger.error(f"Training failed, no checkpoint found at '{args.resume}'")
+            return
         else:
             start_epoch = checkpoint['epoch']
             best_acc1 = checkpoint['best_acc1']
-            model.load_state_dict(checkpoint['state_dict'])
-            optimizer.load_state_dict(checkpoint['optimizer'])
+            model.load_state_dict(checkpoint['model_state_dict'])
             logger.info(
                 f"Loaded checkpoint '{args.resume}' (epoch: {checkpoint['epoch']}, time: {helpers.readable_time(checkpoint['timestamp'])})"
             )
@@ -120,8 +112,22 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         model = torch.nn.DataParallel(model).cuda()
         args.device = 'cuda'
         logger.info("Using DataParallel for GPU(s) CUDA accelerated training.")
-    # create the loss function according to model's device
-    criterion = torch.nn.CrossEntropyLoss().to(torch.device(args.device))
+
+    # create optimizer after model parameters being in the consistent location
+    lr = cfgs.getfloat('learning', 'learning-rate')
+    logger.info(f'Learning-rate starts from {lr}')
+    optimizer = torch.optim.SGD(model.parameters(),
+                                lr,
+                                momentum=cfgs.getfloat('learning', 'momentum'),
+                                weight_decay=cfgs.getfloat(
+                                    'learning', 'weight-decay'))
+    if args.resume:
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    
+    # create the lossfunc(loss function)
+    lossfunc_name = cfgs.get("learning", "loss")
+    logger.info(f"Using {lossfunc_name} as Loss Function.")
+    lossfunc = loss.__dict__[lossfunc_name]().to(torch.device(args.device))
 
     # speedup for batches with fixed-size input
     cudnn.benchmark = cfgs.getboolean('learning', 'cudnn-benchmark')
@@ -157,29 +163,38 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
 
     logger.info(f'Start training at {helpers.readable_time()}')
     epoch_time = helpers.AverageMeter('Tepoch', ':.3f', 's')
+
+    lambda_a = lambda epoch: 0.1 ** (epoch // 30)
+    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lambda_a)
+
     total_epoch = cfgs.getint('learning', 'epochs')
     for epoch in range(start_epoch, total_epoch):
         tic = time.time()
-        lr = helpers.adjust_learning_rate(optimizer, epoch, cfgs)
+        # lr = helpers.adjust_learning_rate(optimizer, epoch, cfgs)
         logger.info(
-            f'Epoch: {epoch},\tLearning-rate: {lr},\tBatch-size: {batch_size}')
+            f'Epoch: {epoch},\tLearning-rate: {scheduler.get_lr()},\tBatch-size: {batch_size}')
 
         # train for one epoch
-        apis.train(train_loader, model, criterion, optimizer, epoch, args)
+        apis.train(train_loader, model, lossfunc, optimizer, epoch, args)
 
         # evaluate on validation set
         logger.info(f'Evaluating on Validation set:')
         val_acc1, val_acc5, val_cms = apis.validate(val_loader, model,
-                                                    criterion, args, cfgs)
+                                                    lossfunc, args, cfgs)
         logger.info(
             f'[Val] Epoch: {epoch},\tAcc1: {val_acc1:.2f}%,\tAcc5: {val_acc5:.2f}%'
         )
+
+        # evaluate on test set
         logger.info(f'Evaluating on Test Set:')
         test_acc1, test_acc5, test_cms = apis.validate(test_loader, model,
-                                                       criterion, args, cfgs)
+                                                       lossfunc, args, cfgs)
         logger.info(
             f'[Test] Epoch: {epoch},\tAcc1: {test_acc1:.2f}%,\tAcc5: {test_acc5:.2f}%'
         )
+
+        # adjust the learning rate
+        scheduler.step()
 
         # remember best acc@1 and save checkpoint
         if args.device == 'cuda':
@@ -193,9 +208,9 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
             {
                 'arch': arch,
                 'epoch': epoch + 1,
-                'state_dict': model_state_dict,
+                'model_state_dict': model_state_dict,
                 'best_acc1': best_acc1,
-                'optimizer': optimizer.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
                 'timestamp': time.time()
             },
             is_best,
