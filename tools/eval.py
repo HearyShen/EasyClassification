@@ -15,6 +15,7 @@ sys.path.insert(0,
 import easycls.apis as apis
 import easycls.models as models
 import easycls.helpers as helpers
+import easycls.learning as learning
 
 
 def parse_args():
@@ -105,32 +106,32 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         logger.info("Using DataParallel for GPU(s) CUDA accelerated evaluating.")
 
     # create the lossfunc(loss function)
-    lossfunc_name = cfgs.get("learning", "loss")
-    logger.info(f"Using {lossfunc_name} as Loss Function.")
-    lossfunc = loss.__dict__[lossfunc_name].to(torch.device(args.device))
+    lossfunc = learning.create_lossfunc(cfgs).to(torch.device(args.device))
 
     # speedup for batches with fixed-size input
-    cudnn.benchmark = cfgs.getboolean('learning', 'cudnn-benchmark')
+    cudnn.benchmark = cfgs.getboolean('speed', 'cudnn-benchmark')
 
     # load dataset for specific task
     # run-time import dataset according to task in config
     task = importlib.import_module('easycls.datasets.' + taskname)
+    batch_size = cfgs.getint('learning', 'batch_size')
+    dataload_workers = cfgs.getint('speed', 'dataload_workers')
 
     # prepare dataset and dataloader
     val_dataset = task.get_val_dataset(cfgs)
     val_loader = torch.utils.data.DataLoader(
         val_dataset,
-        batch_size=cfgs.getint('learning', 'batch-size'),
+        batch_size=batch_size,
         shuffle=False,
-        num_workers=cfgs.getint('learning', 'dataload-workers'),
+        num_workers=dataload_workers,
         pin_memory=True)
 
     test_dataset = task.get_test_dataset(cfgs)
     test_loader = torch.utils.data.DataLoader(
         test_dataset,
-        batch_size=cfgs.getint('learning', 'batch-size'),
+        batch_size=batch_size,
         shuffle=False,
-        num_workers=cfgs.getint('learning', 'dataload-workers'),
+        num_workers=dataload_workers,
         pin_memory=True)
 
     logger.info(f'Start Evaluating at {helpers.readable_time()}')
