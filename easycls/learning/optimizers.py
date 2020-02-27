@@ -211,7 +211,6 @@ def create_optimizer(params, cfgs: ConfigParser):
     'SGD',
     'Rprop',
     'RMSprop',
-    'Optimizer',
     'LBFGS'
     ```
 
