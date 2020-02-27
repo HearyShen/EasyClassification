@@ -30,7 +30,7 @@ def validate(val_loader, model, lossfunc, args, cfgs):
         [batch_time, losses, top1, top5],
         prefix='Test: ')
 
-    num_classes = cfgs.getint("data", "num-classes")
+    num_classes = cfgs.getint("data", "num_classes")
     confusion_matrices = [ConfusionMatrix(index) for index in range(num_classes)]
 
     # switch to evaluate mode

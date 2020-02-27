@@ -213,6 +213,7 @@ def create_lr_scheduler(optimizer, cfgs: ConfigParser, last_epoch=-1):
     """
 
     lr_decay_mode = cfgs.get(CONFIG_SECTION, "decay_mode")
+    logger.info(f"Using learning-rate decay mode '{lr_decay_mode}'.")
 
     if lr_decay_mode == "LambdaLR":
         return create_LambdaLR(optimizer, cfgs, last_epoch)

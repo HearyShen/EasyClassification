@@ -16,6 +16,7 @@ sys.path.insert(0,
 import easycls.apis as apis
 import easycls.models as models
 import easycls.helpers as helpers
+import easycls.learning as learning
 
 
 def parse_args():
@@ -114,29 +115,21 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         logger.info("Using DataParallel for GPU(s) CUDA accelerated training.")
 
     # create optimizer after model parameters being in the consistent location
-    lr = cfgs.getfloat('learning', 'learning-rate')
-    logger.info(f'Learning-rate starts from {lr}')
-    optimizer = torch.optim.SGD(model.parameters(),
-                                lr,
-                                momentum=cfgs.getfloat('learning', 'momentum'),
-                                weight_decay=cfgs.getfloat(
-                                    'learning', 'weight-decay'))
+    optimizer = learning.create_optimizer(model.parameters(), cfgs)
     if args.resume:
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     
     # create the lossfunc(loss function)
-    lossfunc_name = cfgs.get("learning", "loss")
-    logger.info(f"Using {lossfunc_name} as Loss Function.")
-    lossfunc = loss.__dict__[lossfunc_name]().to(torch.device(args.device))
+    lossfunc = learning.create_lossfunc(cfgs).to(torch.device(args.device))
 
     # speedup for batches with fixed-size input
-    cudnn.benchmark = cfgs.getboolean('learning', 'cudnn-benchmark')
+    cudnn.benchmark = cfgs.getboolean('speed', 'cudnn_benchmark')
 
     # load dataset for specific task
     # run-time import dataset according to task in config
     task = importlib.import_module('easycls.datasets.' + taskname)
-    batch_size = cfgs.getint('learning', 'batch-size')
-    dataload_workers = cfgs.getint('learning', 'dataload-workers')
+    batch_size = cfgs.getint('learning', 'batch_size')
+    dataload_workers = cfgs.getint('speed', 'dataload_workers')
 
     # prepare dataset and dataloader
     train_dataset = task.get_train_dataset(cfgs)
@@ -164,15 +157,17 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     logger.info(f'Start training at {helpers.readable_time()}')
     epoch_time = helpers.AverageMeter('Tepoch', ':.3f', 's')
 
-    lambda_a = lambda epoch: 0.1 ** (epoch // 30)
-    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lambda_a)
+    # create lr_scheduler to operate lr decay
+    scheduler = learning.create_lr_scheduler(optimizer, cfgs, last_epoch=start_epoch-1)
+    if args.resume:
+        scheduler.load_state_dict(checkpoint['lr_scheduler_state_dict'])
 
     total_epoch = cfgs.getint('learning', 'epochs')
     for epoch in range(start_epoch, total_epoch):
         tic = time.time()
         # lr = helpers.adjust_learning_rate(optimizer, epoch, cfgs)
         logger.info(
-            f'Epoch: {epoch},\tLearning-rate: {scheduler.get_lr()},\tBatch-size: {batch_size}')
+            f'Epoch: {epoch},\tLearning-rate: {scheduler.get_last_lr()},\tBatch-size: {batch_size}')
 
         # train for one epoch
         apis.train(train_loader, model, lossfunc, optimizer, epoch, args)
@@ -211,6 +206,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
                 'model_state_dict': model_state_dict,
                 'best_acc1': best_acc1,
                 'optimizer_state_dict': optimizer.state_dict(),
+                'lr_scheduler_state_dict': scheduler.state_dict(),
                 'timestamp': time.time()
             },
             is_best,

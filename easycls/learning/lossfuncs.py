@@ -49,4 +49,5 @@ def create_lossfunc(cfgs: ConfigParser):
         logger.error(error_str)
         raise KeyError(error_str)
     else:
+        logger.info(f"Using loss function '{lossfunc_name}'.")
         return lossfunc

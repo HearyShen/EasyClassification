@@ -225,6 +225,7 @@ def create_optimizer(params, cfgs: ConfigParser):
         KeyError, if optimizer algorithm is not supported.
     """
     algorithm = cfgs.get(CONFIG_SECTION, "algorithm")
+    logger.info(f"Using optimizer algorithm '{algorithm}'.")
 
     if algorithm == "Adadelta":
         return create_Adadelta(params, cfgs)
