@@ -174,20 +174,21 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         )
 
         # train for one epoch
-        apis.train(train_loader, model, lossfunc, optimizer, epoch, args)
+        train_loss = apis.train(train_loader, model, lossfunc, optimizer,
+                                epoch, args)
 
         # evaluate on validation set
         logger.info(f'Evaluating on Validation set:')
-        val_acc1, val_acc5, val_cms = apis.validate(val_loader, model,
-                                                    lossfunc, args, cfgs)
+        val_acc1, val_acc5, val_loss, val_cms = apis.validate(
+            val_loader, model, lossfunc, args, cfgs)
         logger.info(
             f'[Val] Epoch: {epoch},\tAcc1: {val_acc1:.2f}%,\tAcc5: {val_acc5:.2f}%'
         )
 
         # evaluate on test set
         logger.info(f'Evaluating on Test Set:')
-        test_acc1, test_acc5, test_cms = apis.validate(test_loader, model,
-                                                       lossfunc, args, cfgs)
+        test_acc1, test_acc5, test_loss, test_cms = apis.validate(
+            test_loader, model, lossfunc, args, cfgs)
         logger.info(
             f'[Test] Epoch: {epoch},\tAcc1: {test_acc1:.2f}%,\tAcc5: {test_acc5:.2f}%'
         )

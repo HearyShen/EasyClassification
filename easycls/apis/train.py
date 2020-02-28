@@ -4,6 +4,20 @@ from ..helpers import AverageMeter, ProgressMeter, accuracy, init_module_logger
 logger = init_module_logger(__name__)
 
 def train(train_loader, model, lossfunc, optimizer, epoch, args):
+    """
+    Train the model for an epoch with train dataloader.
+
+    Args:
+        train_loader (DataLoader): loading data for training.
+        model (Model): PyTorch model, model to be trained.
+        lossfunc (Loss): loss function.
+        optimizer (Optimizer): optimizer algorithm to optimize model's parameters.
+        epoch (int): current epoch (starts from 0).
+        args (ArgumentParser): arguments from commandline inputs.
+
+    Returns:
+        loss (float): average of current epoch's training loss.
+    """
     batch_time = AverageMeter('Tbatch', ':6.3f', 's')
     data_time = AverageMeter('Tdata', ':6.3f', 's')
     losses = AverageMeter('Loss', ':.4e')
@@ -44,3 +58,5 @@ def train(train_loader, model, lossfunc, optimizer, epoch, args):
 
         if i % args.log_freq == 0:
             logger.info(progress.batch_str(i))
+    
+    return losses.avg

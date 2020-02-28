@@ -136,13 +136,13 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
 
     logger.info(f'Start Evaluating at {helpers.readable_time()}')
     logger.info(f'Evaluating on Validation set:')
-    val_acc1, val_acc5, val_cms = apis.validate(val_loader, model, lossfunc,
-                                                args, cfgs)
+    val_acc1, val_acc5, val_loss, val_cms = apis.validate(
+        val_loader, model, lossfunc, args, cfgs)
     logger.info(f'[Val] Acc1: {val_acc1:.2f}%,\tAcc5: {val_acc5:.2f}%.')
     # logger.info(helpers.ConfusionMatrix.str_all(val_cms))
     logger.info(f'Evaluating on Test Set:')
-    test_acc1, test_acc5, test_cms = apis.validate(test_loader, model,
-                                                   lossfunc, args, cfgs)
+    test_acc1, test_acc5, test_loss, test_cms = apis.validate(
+        test_loader, model, lossfunc, args, cfgs)
     logger.info(f'[Test] Acc1: {test_acc1:.2f}%,\tAcc5: {test_acc5:.2f}%.')
     # logger.info(helpers.ConfusionMatrix.str_all(test_cms))
 

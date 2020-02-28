@@ -7,18 +7,19 @@ logger = init_module_logger(__name__)
 
 def validate(val_loader, model, lossfunc, args, cfgs):
     """
-    Validate the model's performance
+    Validate the model's performance.
 
     Args:
-        val_loader: DataLoader, loading data for validation
-        model: PyTorch model, model to be validated
-        lossfunc: loss function
-        args: ArgumentParser, arguments from commandline inputs
-        cfgs: ConfigParser, configurations from config file
+        val_loader (DataLoader): loading data for validation.
+        model (Model): PyTorch model, model to be validated.
+        lossfunc (Loss): loss function.
+        args (ArgumentParser): arguments from commandline inputs.
+        cfgs (ConfigParser): configurations from config file.
 
     Returns:
         top-1 accuracy
         top-5 accuracy
+        loss
         confusion matrices
     """
     batch_time = AverageMeter('Time', ':6.3f', 's')
@@ -60,4 +61,4 @@ def validate(val_loader, model, lossfunc, args, cfgs):
             if i % args.log_freq == 0:
                 logger.info(progress.batch_str(i))
 
-    return top1.avg, top5.avg, confusion_matrices
+    return top1.avg, top5.avg, losses.avg, confusion_matrices
