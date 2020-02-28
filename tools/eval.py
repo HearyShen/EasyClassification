@@ -31,7 +31,7 @@ def parse_args():
                            default='',
                            type=str,
                            metavar='PATH',
-                           help='resume checkpoint file path(default: none)')
+                           help='resume checkpoint file path (default: none)')
     argparser.add_argument('-d',
                            '--device',
                            default='cuda',
@@ -67,17 +67,17 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         'logs',
         f"{taskname}_{arch}_eval_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log"
     ))
-    logger.info(f'Current task (dataset): {taskname}')
+    logger.info(f'Current task (dataset): {taskname}.')
 
     # init test
     cuda_device_count = helpers.check_cuda()
 
     # create model
     if cfgs.getboolean('model', 'pretrained'):
-        logger.info(f"Using pre-trained model '{arch}'")
+        logger.info(f"Using pre-trained model '{arch}'.")
         model = models.__dict__[arch](pretrained=True)
     else:
-        logger.info(f"Creating model '{arch}'")
+        logger.info(f"Creating model '{arch}'.")
         model = models.__dict__[arch]()
 
     # resume as specified
@@ -85,12 +85,13 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         try:
             checkpoint = helpers.load_checkpoint(args.resume)
         except FileNotFoundError as error:
-            logger.error(f"Evaluation failed, no checkpoint found at '{args.resume}'.")
+            logger.error(
+                f"Evaluation failed, no checkpoint found at '{args.resume}'.")
             return
         else:
             model.load_state_dict(checkpoint['model_state_dict'])
             logger.info(
-                f"Loaded checkpoint '{args.resume}' (epoch: {checkpoint['epoch']}, time: {helpers.readable_time(checkpoint['timestamp'])})"
+                f"Loaded checkpoint '{args.resume}' (epoch: {checkpoint['epoch']}, time: {helpers.readable_time(checkpoint['timestamp'])})."
             )
 
     # select the computing device (CPU or GPU) according to arguments and environment
@@ -103,7 +104,8 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         # model = model.cuda()      # even on single-gpu node, DataParallel is still slightly falster than non-DataParallel
         model = torch.nn.DataParallel(model).cuda()
         args.device = 'cuda'
-        logger.info("Using DataParallel for GPU(s) CUDA accelerated evaluating.")
+        logger.info(
+            "Using DataParallel for GPU(s) CUDA accelerated evaluating.")
 
     # create the lossfunc(loss function)
     lossfunc = learning.create_lossfunc(cfgs).to(torch.device(args.device))
@@ -119,31 +121,29 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
 
     # prepare dataset and dataloader
     val_dataset = task.get_val_dataset(cfgs)
-    val_loader = torch.utils.data.DataLoader(
-        val_dataset,
-        batch_size=batch_size,
-        shuffle=False,
-        num_workers=dataload_workers,
-        pin_memory=True)
+    val_loader = torch.utils.data.DataLoader(val_dataset,
+                                             batch_size=batch_size,
+                                             shuffle=False,
+                                             num_workers=dataload_workers,
+                                             pin_memory=True)
 
     test_dataset = task.get_test_dataset(cfgs)
-    test_loader = torch.utils.data.DataLoader(
-        test_dataset,
-        batch_size=batch_size,
-        shuffle=False,
-        num_workers=dataload_workers,
-        pin_memory=True)
+    test_loader = torch.utils.data.DataLoader(test_dataset,
+                                              batch_size=batch_size,
+                                              shuffle=False,
+                                              num_workers=dataload_workers,
+                                              pin_memory=True)
 
     logger.info(f'Start Evaluating at {helpers.readable_time()}')
     logger.info(f'Evaluating on Validation set:')
     val_acc1, val_acc5, val_cms = apis.validate(val_loader, model, lossfunc,
                                                 args, cfgs)
-    logger.info(f'[Val] Acc1: {val_acc1:.2f}%,\tAcc5: {val_acc5:.2f}%')
+    logger.info(f'[Val] Acc1: {val_acc1:.2f}%,\tAcc5: {val_acc5:.2f}%.')
     # logger.info(helpers.ConfusionMatrix.str_all(val_cms))
     logger.info(f'Evaluating on Test Set:')
     test_acc1, test_acc5, test_cms = apis.validate(test_loader, model,
                                                    lossfunc, args, cfgs)
-    logger.info(f'[Test] Acc1: {test_acc1:.2f}%,\tAcc5: {test_acc5:.2f}%')
+    logger.info(f'[Test] Acc1: {test_acc1:.2f}%,\tAcc5: {test_acc5:.2f}%.')
     # logger.info(helpers.ConfusionMatrix.str_all(test_cms))
 
 

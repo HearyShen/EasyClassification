@@ -32,7 +32,7 @@ def parse_args():
                            default='',
                            type=str,
                            metavar='PATH',
-                           help='resume checkpoint file path(default: none)')
+                           help='resume checkpoint file path (default: none)')
     argparser.add_argument('-d',
                            '--device',
                            default='cuda',
@@ -69,10 +69,10 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     # init logger
     taskname = cfgs.get('data', 'task')
     arch = cfgs.get('model', 'arch')
-    logger = helpers.init_root_logger(
-        filename=
-        os.path.join('logs', f"{taskname}_{arch}_train_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log")
-    )
+    logger = helpers.init_root_logger(filename=os.path.join(
+        'logs',
+        f"{taskname}_{arch}_train_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log"
+    ))
     logger.info(f'Current task (dataset): {taskname}')
 
     # init test
@@ -92,7 +92,8 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         try:
             checkpoint = helpers.load_checkpoint(args.resume)
         except FileNotFoundError as error:
-            logger.error(f"Training failed, no checkpoint found at '{args.resume}'")
+            logger.error(
+                f"Training failed, no checkpoint found at '{args.resume}'")
             return
         else:
             start_epoch = checkpoint['epoch']
@@ -118,7 +119,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     optimizer = learning.create_optimizer(model.parameters(), cfgs)
     if args.resume:
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-    
+
     # create the lossfunc(loss function)
     lossfunc = learning.create_lossfunc(cfgs).to(torch.device(args.device))
 
@@ -158,7 +159,9 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     epoch_time = helpers.AverageMeter('Tepoch', ':.3f', 's')
 
     # create lr_scheduler to operate lr decay
-    scheduler = learning.create_lr_scheduler(optimizer, cfgs, last_epoch=start_epoch-1)
+    scheduler = learning.create_lr_scheduler(optimizer,
+                                             cfgs,
+                                             last_epoch=start_epoch - 1)
     if args.resume:
         scheduler.load_state_dict(checkpoint['lr_scheduler_state_dict'])
 
@@ -167,7 +170,8 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         tic = time.time()
         # lr = helpers.adjust_learning_rate(optimizer, epoch, cfgs)
         logger.info(
-            f'Epoch: {epoch},\tLearning-rate: {scheduler.get_last_lr()},\tBatch-size: {batch_size}')
+            f'Epoch: {epoch},\tLearning-rate: {scheduler.get_last_lr()},\tBatch-size: {batch_size}'
+        )
 
         # train for one epoch
         apis.train(train_loader, model, lossfunc, optimizer, epoch, args)
@@ -194,7 +198,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         # remember best acc@1 and save checkpoint
         if args.device == 'cuda':
             # To save a DataParallel model generically, save the model.module.state_dict().
-            model_state_dict = model.module.state_dict() 
+            model_state_dict = model.module.state_dict()
         elif args.device == 'cpu':
             model_state_dict = model.state_dict()
         is_best = val_acc1 > best_acc1
@@ -208,9 +212,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
                 'optimizer_state_dict': optimizer.state_dict(),
                 'lr_scheduler_state_dict': scheduler.state_dict(),
                 'timestamp': time.time()
-            },
-            is_best,
-            f"{taskname}_{arch}")
+            }, is_best, f"{taskname}_{arch}")
 
         # measure the elapsed time
         toc = time.time()
