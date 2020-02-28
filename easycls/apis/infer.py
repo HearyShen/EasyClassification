@@ -1,11 +1,10 @@
-import time
 import torch
 
-from ..helpers import AverageMeter, ProgressMeter, accuracy, ConfusionMatrix, init_module_logger
+from ..helpers import init_module_logger
 
 logger = init_module_logger(__name__)
 
-def infer(model, inputs, outputs):
+def infer(model, inputs):
     """
     Using a model to infer outputs from inputs.
 
@@ -14,7 +13,7 @@ def infer(model, inputs, outputs):
         inputs (Tensor): inputs to the model.
 
     Returns:
-        outputs (Tensor): results inferred from inputs.
+        outputs (Tensor): results inferred by the model from inputs.
     """
     # switch to evaluate mode
     model.eval()
