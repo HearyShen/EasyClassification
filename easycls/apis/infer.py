@@ -1,10 +1,26 @@
-from ..helpers import logs
+import time
+import torch
 
-logger = logs.init_module_logger(__name__)
+from ..helpers import AverageMeter, ProgressMeter, accuracy, ConfusionMatrix, init_module_logger
 
-def func():
-    logger.debug('debug...')
-    logger.info('info...')
-    logger.warning('warning...')
-    logger.error('error...')
-    logger.critical('critical...')
+logger = init_module_logger(__name__)
+
+def infer(model, inputs, outputs):
+    """
+    Using a model to infer outputs from inputs.
+
+    Args:
+        model (Model): a PyTorch model.
+        inputs (Tensor): inputs to the model.
+
+    Returns:
+        outputs (Tensor): results inferred from inputs.
+    """
+    # switch to evaluate mode
+    model.eval()
+
+    with torch.no_grad():
+        # compute outputs
+        outputs = model(inputs)
+
+    return outputs
