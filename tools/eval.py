@@ -111,40 +111,26 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     lossfunc = learning.create_lossfunc(cfgs).to(torch.device(args.device))
 
     # speedup for batches with fixed-size input
-    cudnn.benchmark = cfgs.getboolean('speed', 'cudnn-benchmark')
+    cudnn.benchmark = cfgs.getboolean('speed', 'cudnn_benchmark')
 
     # load dataset for specific task
     # run-time import dataset according to task in config
     task = importlib.import_module('easycls.datasets.' + taskname)
-    batch_size = cfgs.getint('learning', 'batch_size')
-    dataload_workers = cfgs.getint('speed', 'dataload_workers')
-    logger.info(f"Using {dataload_workers} dataloader workers.")
 
-    # prepare dataset and dataloader
-    val_dataset = task.get_val_dataset(cfgs)
-    val_loader = torch.utils.data.DataLoader(val_dataset,
-                                             batch_size=batch_size,
-                                             shuffle=False,
-                                             num_workers=dataload_workers,
-                                             pin_memory=True)
-
-    test_dataset = task.get_test_dataset(cfgs)
-    test_loader = torch.utils.data.DataLoader(test_dataset,
-                                              batch_size=batch_size,
-                                              shuffle=False,
-                                              num_workers=dataload_workers,
-                                              pin_memory=True)
+    # prepare dataloader
+    val_loader = task.load_valset(cfgs)
+    test_loader = task.load_testset(cfgs)
 
     logger.info(f'Start Evaluating at {helpers.readable_time()}')
     logger.info(f'Evaluating on Validation set:')
     val_acc1, val_acc5, val_loss, val_cms = apis.validate(
         val_loader, model, lossfunc, args, cfgs)
-    logger.info(f'[Val] Acc1: {val_acc1:.2f}%,\tAcc5: {val_acc5:.2f}%.')
+    logger.info(f'[Val] Acc1: {val_acc1:.2f}%, Acc5: {val_acc5:.2f}%.')
     # logger.info(helpers.ConfusionMatrix.str_all(val_cms))
     logger.info(f'Evaluating on Test Set:')
     test_acc1, test_acc5, test_loss, test_cms = apis.validate(
         test_loader, model, lossfunc, args, cfgs)
-    logger.info(f'[Test] Acc1: {test_acc1:.2f}%,\tAcc5: {test_acc5:.2f}%.')
+    logger.info(f'[Test] Acc1: {test_acc1:.2f}%, Acc5: {test_acc5:.2f}%.')
     # logger.info(helpers.ConfusionMatrix.str_all(test_cms))
 
 

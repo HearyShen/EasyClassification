@@ -129,32 +129,11 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     # load dataset for specific task
     # run-time import dataset according to task in config
     task = importlib.import_module('easycls.datasets.' + taskname)
-    batch_size = cfgs.getint('learning', 'batch_size')
-    dataload_workers = cfgs.getint('speed', 'dataload_workers')
-    logger.info(f"Using {dataload_workers} dataloader workers.")
 
-    # prepare dataset and dataloader
-    train_dataset = task.get_train_dataset(cfgs)
-    train_loader = torch.utils.data.DataLoader(train_dataset,
-                                               batch_size=batch_size,
-                                               shuffle=True,
-                                               num_workers=dataload_workers,
-                                               pin_memory=True,
-                                               sampler=None)
-
-    val_dataset = task.get_val_dataset(cfgs)
-    val_loader = torch.utils.data.DataLoader(val_dataset,
-                                             batch_size=batch_size,
-                                             shuffle=False,
-                                             num_workers=dataload_workers,
-                                             pin_memory=True)
-
-    test_dataset = task.get_test_dataset(cfgs)
-    test_loader = torch.utils.data.DataLoader(test_dataset,
-                                              batch_size=batch_size,
-                                              shuffle=False,
-                                              num_workers=dataload_workers,
-                                              pin_memory=True)
+    # prepare dataloader
+    train_loader = task.load_trainset(cfgs)
+    val_loader = task.load_valset(cfgs)
+    test_loader = task.load_testset(cfgs)
 
     logger.info(f'Start training at {helpers.readable_time()}')
     epoch_time = helpers.AverageMeter('Tepoch', ':.3f', 's')
@@ -171,7 +150,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         tic = time.time()
         # lr = helpers.adjust_learning_rate(optimizer, epoch, cfgs)
         logger.info(
-            f'Epoch: {epoch},\tLearning-rate: {scheduler.get_last_lr()},\tBatch-size: {batch_size}'
+            f'Starting epoch: {epoch}/{total_epoch}, learning-rate: {scheduler.get_last_lr()}.'
         )
 
         # train for one epoch
@@ -183,7 +162,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         val_acc1, val_acc5, val_loss, val_cms = apis.validate(
             val_loader, model, lossfunc, args, cfgs)
         logger.info(
-            f'[Val] Epoch: {epoch},\tAcc1: {val_acc1:.2f}%,\tAcc5: {val_acc5:.2f}%'
+            f'[Val] Epoch: {epoch},\tAcc1: {val_acc1:.2f}%, Acc5: {val_acc5:.2f}%'
         )
 
         # evaluate on test set
@@ -191,7 +170,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         test_acc1, test_acc5, test_loss, test_cms = apis.validate(
             test_loader, model, lossfunc, args, cfgs)
         logger.info(
-            f'[Test] Epoch: {epoch},\tAcc1: {test_acc1:.2f}%,\tAcc5: {test_acc5:.2f}%'
+            f'[Test] Epoch: {epoch},\tAcc1: {test_acc1:.2f}%, Acc5: {test_acc5:.2f}%'
         )
 
         # adjust the learning rate
