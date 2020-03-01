@@ -67,7 +67,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         'logs',
         f"{taskname}_{arch}_eval_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log"
     ))
-    logger.info(f'Current task (dataset): {taskname}.')
+    logger.info(f"Current task (dataset): '{taskname}'.")
 
     # init test
     cuda_device_count = helpers.check_cuda()
@@ -118,6 +118,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     task = importlib.import_module('easycls.datasets.' + taskname)
     batch_size = cfgs.getint('learning', 'batch_size')
     dataload_workers = cfgs.getint('speed', 'dataload_workers')
+    logger.info(f"Using {dataload_workers} dataloader workers.")
 
     # prepare dataset and dataloader
     val_dataset = task.get_val_dataset(cfgs)

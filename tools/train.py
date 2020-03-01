@@ -73,7 +73,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         'logs',
         f"{taskname}_{arch}_train_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log"
     ))
-    logger.info(f'Current task (dataset): {taskname}')
+    logger.info(f"Current task (dataset): '{taskname}'.")
 
     # init test
     cuda_device_count = helpers.check_cuda()
@@ -83,7 +83,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
         logger.info(f"Using pre-trained model '{arch}'")
         model = models.__dict__[arch](pretrained=True)
     else:
-        logger.info(f"Creating model '{arch}'")
+        logger.info(f"Creating model '{arch}'.")
         model = models.__dict__[arch]()
 
     # resume as specified
@@ -93,14 +93,14 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
             checkpoint = helpers.load_checkpoint(args.resume)
         except FileNotFoundError as error:
             logger.error(
-                f"Training failed, no checkpoint found at '{args.resume}'")
+                f"Training failed, no checkpoint found at '{args.resume}'.")
             return
         else:
             start_epoch = checkpoint['epoch']
             best_acc1 = checkpoint['best_acc1']
             model.load_state_dict(checkpoint['model_state_dict'])
             logger.info(
-                f"Loaded checkpoint '{args.resume}' (epoch: {checkpoint['epoch']}, time: {helpers.readable_time(checkpoint['timestamp'])})"
+                f"Loaded checkpoint '{args.resume}' (epoch: {checkpoint['epoch']}, time: {helpers.readable_time(checkpoint['timestamp'])})."
             )
 
     # select the computing device (CPU or GPU) according to arguments and environment
@@ -131,6 +131,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     task = importlib.import_module('easycls.datasets.' + taskname)
     batch_size = cfgs.getint('learning', 'batch_size')
     dataload_workers = cfgs.getint('speed', 'dataload_workers')
+    logger.info(f"Using {dataload_workers} dataloader workers.")
 
     # prepare dataset and dataloader
     train_dataset = task.get_train_dataset(cfgs)
