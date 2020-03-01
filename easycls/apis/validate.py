@@ -47,9 +47,10 @@ def validate(val_loader, model, lossfunc, args, cfgs):
 
             # measure accuracy and record loss
             acc1, acc5 = accuracy(outputs, targets, topk=(1, 5))
-            losses.update(loss.item(), inputs.size(0))
-            top1.update(acc1*100, inputs.size(0))
-            top5.update(acc5*100, inputs.size(0))
+            batch_size = targets.size(0)
+            losses.update(loss.item(), batch_size)
+            top1.update(acc1*100, batch_size)
+            top5.update(acc5*100, batch_size)
 
             # update all classes' confusion matrices
             ConfusionMatrix.update_all(confusion_matrices, outputs, targets)
