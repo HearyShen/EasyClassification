@@ -15,6 +15,7 @@ def get_train_dataset(cfgs: ConfigParser):
     Returns the train dataset.
     """
     traindir = os.path.join(cfgs.get('data', 'path'), 'train')
+    logger.info(f"Creating train set from '{traindir}'.")
     train_dataset = datasets.ImageFolder(
         traindir,
         transforms.Compose([
@@ -31,6 +32,7 @@ def get_val_dataset(cfgs: ConfigParser):
     Returns the validation dataset.
     """
     valdir = os.path.join(cfgs.get('data', 'path'), 'val')
+    logger.info(f"Creating validation set from '{valdir}'.")
     val_dataset = datasets.ImageFolder(
         valdir,
         transforms.Compose([
@@ -47,6 +49,7 @@ def get_test_dataset(cfgs: ConfigParser):
     Returns the test dataset.
     """
     testdir = os.path.join(cfgs.get('data', 'path'), 'test')
+    logger.info(f"Creating test set from '{testdir}'.")
     test_dataset = datasets.ImageFolder(
         testdir,
         transforms.Compose([
@@ -67,7 +70,8 @@ def load_trainset(cfgs: ConfigParser):
     batch_size = cfgs.getint('learning', 'batch_size')
     dataload_workers = cfgs.getint('speed', 'dataload_workers')
     logger.info(
-        f"Train set is being loaded by {dataload_workers} dataloader workers.")
+        f"Train set is being loaded by {dataload_workers} dataloader workers. (batch_size={batch_size})"
+    )
 
     dataloader = DataLoader(
         dataset,
@@ -87,7 +91,7 @@ def load_valset(cfgs: ConfigParser):
     batch_size = cfgs.getint('learning', 'batch_size')
     dataload_workers = cfgs.getint('speed', 'dataload_workers')
     logger.info(
-        f"Validation set is being loaded by {dataload_workers} dataloader workers."
+        f"Validation set is being loaded by {dataload_workers} dataloader workers. (batch_size={batch_size})"
     )
 
     dataloader = DataLoader(
@@ -108,7 +112,8 @@ def load_testset(cfgs: ConfigParser):
     batch_size = cfgs.getint('learning', 'batch_size')
     dataload_workers = cfgs.getint('speed', 'dataload_workers')
     logger.info(
-        f"Test set is being loaded by {dataload_workers} dataloader workers.")
+        f"Test set is being loaded by {dataload_workers} dataloader workers. (batch_size={batch_size})"
+    )
 
     dataloader = DataLoader(
         dataset,
