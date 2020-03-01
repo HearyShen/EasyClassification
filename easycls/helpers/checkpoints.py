@@ -17,7 +17,7 @@ def save_checkpoint(obj, is_best, filename="model"):
 
     # create dirs if not existed
     dirname = os.path.dirname(filename)
-    if not os.path.exists(dirname):
+    if dirname and (not os.path.exists(dirname)):
         os.makedirs(dirname)
 
     # save latest checkpoint
