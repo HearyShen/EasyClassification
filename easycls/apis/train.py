@@ -47,7 +47,7 @@ def train(train_loader, model, lossfunc, optimizer, epoch, args):
         top1.update(acc1*100, inputs.size(0))
         top5.update(acc5*100, inputs.size(0))
 
-        # compute gradient and do SGD step
+        # compute gradient and do optimizing step
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
