@@ -1,11 +1,11 @@
 # EasyClassification
 
-**easycls** is a classification framework based on PyTorch.
+[**easycls**](https://github.com/HearyShen/EasyClassification) is a classification framework based on PyTorch.
 
 ## Features
 
-- an image classification framework with clean code and fine extensibility
+- a deep-learning classification framework with clean code and fine extensibility
 - CPU and GPU(CUDA) support
-- configuration file
-- auto logs
+- configuration file for all functions and parameters
+- auto log system
 - etc
