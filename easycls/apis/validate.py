@@ -14,7 +14,7 @@ def validate(val_loader, model, lossfunc, args, cfgs):
         model (Model): PyTorch model, model to be validated.
         lossfunc (Loss): loss function.
         args (ArgumentParser): arguments from commandline inputs.
-        cfgs (ConfigParser): configurations from config file.
+        cfgs (dict): configurations from config file.
 
     Returns:
         top-1 accuracy
@@ -31,7 +31,7 @@ def validate(val_loader, model, lossfunc, args, cfgs):
         [batch_time, losses, top1, top5],
         prefix='Test: ')
 
-    num_classes = cfgs.getint("data", "num_classes")
+    num_classes = cfgs["model"].get("num_classes")
     confusion_matrices = [ConfusionMatrix(index) for index in range(num_classes)]
 
     # switch to evaluate mode

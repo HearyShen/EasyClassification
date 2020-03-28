@@ -1,4 +1,3 @@
-from configparser import ConfigParser
 import torch.nn.modules.loss as loss
 from ..helpers import init_module_logger
 
@@ -7,7 +6,7 @@ logger = init_module_logger(__name__)
 CONFIG_SECTION = "loss"
 
 
-def create_lossfunc(cfgs: ConfigParser):
+def create_lossfunc(cfgs: dict):
     """
     Create loss function according configs.
 
@@ -40,7 +39,7 @@ def create_lossfunc(cfgs: ConfigParser):
             'Loss' in item) and callable(loss.__dict__[item])
     ]
 
-    lossfunc_name = cfgs.get(CONFIG_SECTION, "loss_function")
+    lossfunc_name = cfgs[CONFIG_SECTION].get("loss_function")
 
     try:
         lossfunc = loss.__dict__[lossfunc_name]()

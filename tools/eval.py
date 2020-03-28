@@ -1,7 +1,6 @@
 import os
 import time
 from argparse import ArgumentParser
-from configparser import ConfigParser
 import importlib
 import torch
 import torch.backends.cudnn as cudnn
@@ -59,10 +58,10 @@ def main():
     worker(args, cfgs)
 
 
-def worker(args: ArgumentParser, cfgs: ConfigParser):
+def worker(args: ArgumentParser, cfgs: dict):
     # init logger
-    taskname = cfgs.get('data', 'task')
-    arch = cfgs.get('model', 'arch')
+    taskname = cfgs['data'].get('task')
+    arch = cfgs['model'].get('arch')
     logger = helpers.init_root_logger(filename=os.path.join(
         'logs',
         f"{taskname}_{arch}_eval_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log"
@@ -73,7 +72,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     cuda_device_count = helpers.check_cuda()
 
     # create model
-    if cfgs.getboolean('model', 'pretrained'):
+    if cfgs['model'].get('pretrained'):
         logger.info(f"Using pre-trained model '{arch}'.")
         model = models.__dict__[arch](pretrained=True)
     else:
@@ -111,7 +110,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     lossfunc = learning.create_lossfunc(cfgs).to(torch.device(args.device))
 
     # speedup for batches with fixed-size input
-    cudnn.benchmark = cfgs.getboolean('speed', 'cudnn_benchmark')
+    cudnn.benchmark = cfgs['speed'].get('cudnn_benchmark', False)
 
     # load dataset for specific task
     # run-time import dataset according to task in config

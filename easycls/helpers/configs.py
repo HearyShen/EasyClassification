@@ -1,5 +1,4 @@
-from configparser import ConfigParser
-
+import yaml
 
 def parse_cfgs(path):
     """
@@ -8,35 +7,35 @@ def parse_cfgs(path):
     Usage:
 
     ```python
-    cfgs = parse_cfgs('config.ini')
+    cfgs = parse_cfgs('config.yml')
 
-    task = cfgs.get("data", "task")
-    pretrain = cfgs.getboolean("model", "pretrained")
-    num_classes = cfgs.getint("data", "num-classes")
-    lr = cfgs.getfloat("learning", "learning-rate")
+    task = cfgs["data"].get("task")
+    pretrain = cfgs["model"].get("pretrained", False)
+    num_classes = cfgs["model"].get("num-classes")
+    lr = cfgs["learning"].get("learning-rate", 0.01)
     ```
 
     Args:
         path: configuration file path
     
     Return:
-        an instance of ConfigParser
+        configurations (dict)
     """
-    cfgparser = ConfigParser()
-    cfgparser.read(path)
+    with open(path, 'r') as f:
+        cfgs = yaml.safe_load(f)
 
-    return cfgparser
+    return cfgs
 
 
 # Unit Test
 if __name__ == "__main__":
-    cfgs = parse_cfgs('config.ini')
+    cfgs = parse_cfgs('config.yml')
 
-    task = cfgs.get("data", "task")
-    pretrain = cfgs.getboolean("model", "pretrained")
-    num_classes = cfgs.getint("data", "num-classes")
-    lr = cfgs.getfloat("learning", "learning-rate")
+    task = cfgs["data"].get("task")
+    pretrained = cfgs["model"].get("pretrained", False)
+    num_classes = cfgs["model"].get("num_classes")
+    lr = cfgs["learning"].get("learning-rate", 0.01)
 
     print(
-        f'task={task}\tpretrain={pretrain}\tnum-classes-{num_classes}\tlr={lr}'
+        f'task={task}\tpretrained={pretrained}\tnum_classes={num_classes}\tlr={lr}'
     )

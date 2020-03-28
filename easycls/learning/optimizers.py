@@ -1,4 +1,3 @@
-from configparser import ConfigParser
 import torch.optim as optim
 from ..helpers import init_module_logger
 
@@ -7,11 +6,11 @@ logger = init_module_logger(__name__)
 CONFIG_SECTION = "optimizer"
 
 
-def create_Adadelta(params, cfgs: ConfigParser):
-    lr = cfgs.getfloat(CONFIG_SECTION, "lr", fallback=1.0)
-    rho = cfgs.getfloat(CONFIG_SECTION, "rho", fallback=0.9)
-    eps = cfgs.getfloat(CONFIG_SECTION, "eps", fallback=1e-6)
-    weight_decay = cfgs.getfloat(CONFIG_SECTION, "weight_decay", fallback=0)
+def create_Adadelta(params, cfgs: dict):
+    lr = cfgs[CONFIG_SECTION].get("lr", 1.0)
+    rho = cfgs[CONFIG_SECTION].get("rho", 0.9)
+    eps = cfgs[CONFIG_SECTION].get("eps", 1e-6)
+    weight_decay = cfgs[CONFIG_SECTION].get("weight_decay", 0)
 
     return optim.Adadelta(params,
                           lr=lr,
@@ -20,14 +19,13 @@ def create_Adadelta(params, cfgs: ConfigParser):
                           weight_decay=weight_decay)
 
 
-def create_Adagrad(params, cfgs: ConfigParser):
-    lr = cfgs.getfloat(CONFIG_SECTION, "lr", fallback=0.01)
-    lr_decay = cfgs.getfloat(CONFIG_SECTION, "lr_decay", fallback=0)
-    weight_decay = cfgs.getfloat(CONFIG_SECTION, "weight_decay", fallback=0)
-    initial_accumulator_value = cfgs.getfloat(CONFIG_SECTION,
-                                              "initial_accumulator_value",
-                                              fallback=0)
-    eps = cfgs.getfloat(CONFIG_SECTION, "eps", fallback=1e-10)
+def create_Adagrad(params, cfgs: dict):
+    lr = cfgs[CONFIG_SECTION].get("lr", 0.01)
+    lr_decay = cfgs[CONFIG_SECTION].get("lr_decay", 0)
+    weight_decay = cfgs[CONFIG_SECTION].get("weight_decay", 0)
+    initial_accumulator_value = cfgs[CONFIG_SECTION].get(
+        "initial_accumulator_value", 0)
+    eps = cfgs[CONFIG_SECTION].get("eps", 1e-10)
 
     return optim.Adagrad(params,
                          lr=lr,
@@ -37,83 +35,63 @@ def create_Adagrad(params, cfgs: ConfigParser):
                          eps=eps)
 
 
-def create_Adam(params, cfgs: ConfigParser):
-    lr = cfgs.getfloat(CONFIG_SECTION, "lr", fallback=1e-3)
-    betas_list = [
-        float(beta)
-        for beta in cfgs.get(CONFIG_SECTION, "betas", fallback="(0.9,0.999)").
-        strip().lstrip('(').rstrip(')').split(',')
-    ]
-    betas = (betas_list[0], betas_list[1])
-    eps = cfgs.getfloat(CONFIG_SECTION, "eps", fallback=1e-8)
-    weight_decay = cfgs.getfloat(CONFIG_SECTION, "weight_decay", fallback=0)
-    amsgrad = cfgs.getboolean(CONFIG_SECTION, "amsgrad", fallback=False)
+def create_Adam(params, cfgs: dict):
+    lr = cfgs[CONFIG_SECTION].get("lr", 1e-3)
+    betas = cfgs[CONFIG_SECTION].get("betas", (0.9,0.999))
+    eps = cfgs[CONFIG_SECTION].get("eps", 1e-8)
+    weight_decay = cfgs[CONFIG_SECTION].get("weight_decay", 0)
+    amsgrad = cfgs[CONFIG_SECTION].get("amsgrad", False)
 
     return optim.Adam(params,
                       lr=lr,
-                      betas=betas,
+                      betas=tuple(betas),
                       eps=eps,
                       weight_decay=weight_decay,
                       amsgrad=amsgrad)
 
 
-def create_AdamW(params, cfgs: ConfigParser):
-    lr = cfgs.getfloat(CONFIG_SECTION, "lr", fallback=1e-3)
-    betas_list = [
-        float(beta)
-        for beta in cfgs.get(CONFIG_SECTION, "betas", fallback="(0.9,0.999)").
-        strip().lstrip('(').rstrip(')').split(',')
-    ]
-    betas = (betas_list[0], betas_list[1])
-    eps = cfgs.getfloat(CONFIG_SECTION, "eps", fallback=1e-8)
-    weight_decay = cfgs.getfloat(CONFIG_SECTION, "weight_decay", fallback=1e-2)
-    amsgrad = cfgs.getboolean(CONFIG_SECTION, "amsgrad", fallback=False)
+def create_AdamW(params, cfgs: dict):
+    lr = cfgs[CONFIG_SECTION].get("lr", 1e-3)
+    betas = cfgs[CONFIG_SECTION].get("betas", (0.9,0.999))
+    eps = cfgs[CONFIG_SECTION].get("eps", 1e-8)
+    weight_decay = cfgs[CONFIG_SECTION].get("weight_decay", 1e-2)
+    amsgrad = cfgs[CONFIG_SECTION].get("amsgrad", False)
 
     return optim.AdamW(params,
                        lr=lr,
-                       betas=betas,
+                       betas=tuple(betas),
                        eps=eps,
                        weight_decay=weight_decay,
                        amsgrad=amsgrad)
 
 
-def create_SparseAdam(params, cfgs: ConfigParser):
-    lr = cfgs.getfloat(CONFIG_SECTION, "lr", fallback=1e-3)
-    betas_list = [
-        float(beta)
-        for beta in cfgs.get(CONFIG_SECTION, "betas", fallback="(0.9,0.999)").
-        strip().lstrip('(').rstrip(')').split(',')
-    ]
-    betas = (betas_list[0], betas_list[1])
-    eps = cfgs.getfloat(CONFIG_SECTION, "eps", fallback=1e-8)
+def create_SparseAdam(params, cfgs: dict):
+    lr = cfgs[CONFIG_SECTION].get("lr", 1e-3)
+    betas = cfgs[CONFIG_SECTION].get("betas", (0.9,0.999))
+    eps = cfgs[CONFIG_SECTION].get("eps", 1e-8)
 
-    return optim.SparseAdam(params, lr=lr, betas=betas, eps=eps)
+    return optim.SparseAdam(params, lr=lr, betas=tuple(betas), eps=eps)
 
 
-def create_Adamax(params, cfgs: ConfigParser):
-    lr = cfgs.getfloat(CONFIG_SECTION, "lr", fallback=2e-3)
-    betas_list = [
-        float(beta)
-        for beta in cfgs.get(CONFIG_SECTION, "betas", fallback="(0.9,0.999)").
-        strip().lstrip('(').rstrip(')').split(',')
-    ]
-    betas = (betas_list[0], betas_list[1])
-    eps = cfgs.getfloat(CONFIG_SECTION, "eps", fallback=1e-8)
-    weight_decay = cfgs.getfloat(CONFIG_SECTION, "weight_decay", fallback=0)
+def create_Adamax(params, cfgs: dict):
+    lr = cfgs[CONFIG_SECTION].get("lr", 2e-3)
+    betas = cfgs[CONFIG_SECTION].get("betas", (0.9,0.999))
+    eps = cfgs[CONFIG_SECTION].get("eps", 1e-8)
+    weight_decay = cfgs[CONFIG_SECTION].get("weight_decay", 0)
 
     return optim.Adamax(params,
                         lr=lr,
-                        betas=betas,
+                        betas=tuple(betas),
                         eps=eps,
                         weight_decay=weight_decay)
 
 
-def create_ASGD(params, cfgs: ConfigParser):
-    lr = cfgs.getfloat(CONFIG_SECTION, "lr", fallback=1e-2)
-    lambd = cfgs.getfloat(CONFIG_SECTION, "lambd", fallback=1e-4)
-    alpha = cfgs.getfloat(CONFIG_SECTION, "alpha", fallback=0.75)
-    t0 = cfgs.getfloat(CONFIG_SECTION, "t0", fallback=1e6)
-    weight_decay = cfgs.getfloat(CONFIG_SECTION, "weight_decay", fallback=0)
+def create_ASGD(params, cfgs: dict):
+    lr = cfgs[CONFIG_SECTION].get("lr", 1e-2)
+    lambd = cfgs[CONFIG_SECTION].get("lambd", 1e-4)
+    alpha = cfgs[CONFIG_SECTION].get("alpha", 0.75)
+    t0 = cfgs[CONFIG_SECTION].get("t0", 1e6)
+    weight_decay = cfgs[CONFIG_SECTION].get("weight_decay", 0)
 
     return optim.ASGD(params,
                       lr=lr,
@@ -123,16 +101,14 @@ def create_ASGD(params, cfgs: ConfigParser):
                       weight_decay=weight_decay)
 
 
-def create_LBFGS(params, cfgs: ConfigParser):
-    lr = cfgs.getfloat(CONFIG_SECTION, "lr", fallback=1)
-    max_iter = cfgs.getint(CONFIG_SECTION, "max_iter", fallback=20)
-    max_eval = cfgs.getint(CONFIG_SECTION, "max_eval", fallback=None)
-    tolerance_grad = cfgs.getfloat(CONFIG_SECTION,
-                                   "tolerance_grad",
-                                   fallback=1e-7)
-    tolerance_change = cfgs.getfloat(CONFIG_SECTION, "tolerance_change", 1e-9)
-    history_size = cfgs.getint(CONFIG_SECTION, "history_size", fallback=100)
-    line_search_fn = cfgs.get(CONFIG_SECTION, "line_search_fn", None)
+def create_LBFGS(params, cfgs: dict):
+    lr = cfgs[CONFIG_SECTION].get("lr", 1)
+    max_iter = cfgs[CONFIG_SECTION].get("max_iter", 20)
+    max_eval = cfgs[CONFIG_SECTION].get("max_eval", None)
+    tolerance_grad = cfgs[CONFIG_SECTION].get("tolerance_grad", 1e-7)
+    tolerance_change = cfgs[CONFIG_SECTION].get("tolerance_change", 1e-9)
+    history_size = cfgs[CONFIG_SECTION].get("history_size", 100)
+    line_search_fn = cfgs[CONFIG_SECTION].get("line_search_fn", None)
 
     return optim.LBFGS(params,
                        lr=lr,
@@ -144,13 +120,13 @@ def create_LBFGS(params, cfgs: ConfigParser):
                        line_search_fn=line_search_fn)
 
 
-def create_RMSprop(params, cfgs: ConfigParser):
-    lr = cfgs.getfloat(CONFIG_SECTION, "lr", fallback=1e-2)
-    alpha = cfgs.getfloat(CONFIG_SECTION, "alpha", fallback=0.99)
-    eps = cfgs.getfloat(CONFIG_SECTION, "eps", fallback=1e-8)
-    weight_decay = cfgs.getfloat(CONFIG_SECTION, "weight_decay", fallback=0)
-    momentum = cfgs.getfloat(CONFIG_SECTION, "momentum", fallback=0)
-    centered = cfgs.getboolean(CONFIG_SECTION, "centered", fallback=False)
+def create_RMSprop(params, cfgs: dict):
+    lr = cfgs[CONFIG_SECTION].get("lr", 1e-2)
+    alpha = cfgs[CONFIG_SECTION].get("alpha", 0.99)
+    eps = cfgs[CONFIG_SECTION].get("eps", 1e-8)
+    weight_decay = cfgs[CONFIG_SECTION].get("weight_decay", 0)
+    momentum = cfgs[CONFIG_SECTION].get("momentum", 0)
+    centered = cfgs[CONFIG_SECTION].get("centered", False)
 
     return optim.RMSprop(params,
                          lr=lr,
@@ -161,30 +137,20 @@ def create_RMSprop(params, cfgs: ConfigParser):
                          centered=centered)
 
 
-def create_Rprop(params, cfgs: ConfigParser):
-    lr = cfgs.getfloat(CONFIG_SECTION, "lr", fallback=1e-2)
-    etas_list = [
-        float(eta)
-        for eta in cfgs.get(CONFIG_SECTION, "etas", fallback="(0.5, 1.2)").
-        strip().lstrip('(').rstrip(')').split(',')
-    ]
-    etas = (etas_list[0], etas_list[1])
-    step_sizes_list = [
-        float(step_size) for step_size in cfgs.get(
-            CONFIG_SECTION, "step_sizes",
-            fallback="(1e-6, 50)").strip().lstrip('(').rstrip(')').split(',')
-    ]
-    step_sizes = (step_sizes_list[0], step_sizes_list[1])
+def create_Rprop(params, cfgs: dict):
+    lr = cfgs[CONFIG_SECTION].get("lr", 1e-2)
+    etas = cfgs[CONFIG_SECTION].get("etas", (0.5, 1.2))
+    step_sizes = cfgs[CONFIG_SECTION].get("step_sizes", (1e-6, 50))
 
-    return optim.Rprop(params, lr=lr, etas=etas, step_sizes=step_sizes)
+    return optim.Rprop(params, lr=lr, etas=tuple(etas), step_sizes=tuple(step_sizes))
 
 
-def create_SGD(params, cfgs: ConfigParser):
-    lr = cfgs.getfloat(CONFIG_SECTION, "lr")
-    momentum = cfgs.getfloat(CONFIG_SECTION, "momentum", fallback=0)
-    dampening = cfgs.getfloat(CONFIG_SECTION, "dampening", fallback=0)
-    weight_decay = cfgs.getfloat(CONFIG_SECTION, "weight_decay", fallback=0)
-    nesterov = cfgs.getboolean(CONFIG_SECTION, "nesterov", fallback=False)
+def create_SGD(params, cfgs: dict):
+    lr = cfgs[CONFIG_SECTION].get("lr")
+    momentum = cfgs[CONFIG_SECTION].get("momentum", 0)
+    dampening = cfgs[CONFIG_SECTION].get("dampening", 0)
+    weight_decay = cfgs[CONFIG_SECTION].get("weight_decay", 0)
+    nesterov = cfgs[CONFIG_SECTION].get("nesterov", False)
 
     return optim.SGD(params,
                      lr=lr,
@@ -194,7 +160,7 @@ def create_SGD(params, cfgs: ConfigParser):
                      nesterov=nesterov)
 
 
-def create_optimizer(params, cfgs: ConfigParser):
+def create_optimizer(params, cfgs: dict):
     """
     Create optimizer according to the config.
 
@@ -216,7 +182,7 @@ def create_optimizer(params, cfgs: ConfigParser):
 
     Args:
         params (iterable): an iterable object contains parameters to be optimized.
-        cfgs (ConfigParser): parsed configurations from configuration file.
+        cfgs (dict): parsed configurations from configuration file.
 
     Returns:
         The configurated optimizer.
@@ -224,7 +190,7 @@ def create_optimizer(params, cfgs: ConfigParser):
     Raises:
         KeyError, if optimizer algorithm is not supported.
     """
-    algorithm = cfgs.get(CONFIG_SECTION, "algorithm")
+    algorithm = cfgs[CONFIG_SECTION].get("algorithm")
     logger.info(f"Using optimizer algorithm '{algorithm}'.")
 
     if algorithm == "Adadelta":

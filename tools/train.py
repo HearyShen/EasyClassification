@@ -2,7 +2,6 @@ import os
 import time
 import datetime
 from argparse import ArgumentParser
-from configparser import ConfigParser
 import importlib
 import torch
 import torch.backends.cudnn as cudnn
@@ -63,12 +62,12 @@ def main():
 best_acc1 = 0
 
 
-def worker(args: ArgumentParser, cfgs: ConfigParser):
+def worker(args: ArgumentParser, cfgs: dict):
     global best_acc1
 
     # init logger
-    taskname = cfgs.get('data', 'task')
-    arch = cfgs.get('model', 'arch')
+    taskname = cfgs['data'].get('task')
+    arch = cfgs['model'].get('arch')
     logger = helpers.init_root_logger(filename=os.path.join(
         'logs',
         f"{taskname}_{arch}_train_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log"
@@ -79,12 +78,11 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     cuda_device_count = helpers.check_cuda()
 
     # create model
-    if cfgs.getboolean('model', 'pretrained'):
-        logger.info(f"Using pre-trained model '{arch}'")
-        model = models.__dict__[arch](pretrained=True)
-    else:
-        logger.info(f"Creating model '{arch}'.")
-        model = models.__dict__[arch]()
+    arch = cfgs["model"].get("arch")
+    kwargs = cfgs["model"].copy()
+    del kwargs["arch"]     # avoid conflicts
+    model = models.__dict__[arch](**kwargs)
+    logger.info(f"Creating model '{arch}' with specs: {kwargs}.")
 
     # resume as specified
     start_epoch = 0
@@ -124,7 +122,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     lossfunc = learning.create_lossfunc(cfgs).to(torch.device(args.device))
 
     # speedup for batches with fixed-size input
-    cudnn.benchmark = cfgs.getboolean('speed', 'cudnn_benchmark')
+    cudnn.benchmark = cfgs['speed'].get('cudnn_benchmark', False)
 
     # load dataset for specific task
     # run-time import dataset according to task in config
@@ -145,7 +143,7 @@ def worker(args: ArgumentParser, cfgs: ConfigParser):
     if args.resume:
         scheduler.load_state_dict(checkpoint['lr_scheduler_state_dict'])
 
-    total_epoch = cfgs.getint('learning', 'epochs')
+    total_epoch = cfgs['learning'].get('epochs', 1)
     for epoch in range(start_epoch, total_epoch):
         tic = time.time()
         # lr = helpers.adjust_learning_rate(optimizer, epoch, cfgs)

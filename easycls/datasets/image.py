@@ -1,5 +1,4 @@
 import os
-from configparser import ConfigParser
 from torch.utils.data import DataLoader
 from torchvision import transforms, datasets
 from ..helpers import init_module_logger
@@ -10,11 +9,11 @@ normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
 
 
-def get_train_dataset(cfgs: ConfigParser):
+def get_train_dataset(cfgs: dict):
     """
     Returns the train dataset.
     """
-    traindir = os.path.join(cfgs.get('data', 'path'), 'train')
+    traindir = os.path.join(cfgs['data'].get('path'), 'train')
     logger.info(f"Creating train set from '{traindir}'.")
     train_dataset = datasets.ImageFolder(
         traindir,
@@ -27,11 +26,11 @@ def get_train_dataset(cfgs: ConfigParser):
     return train_dataset
 
 
-def get_val_dataset(cfgs: ConfigParser):
+def get_val_dataset(cfgs: dict):
     """
     Returns the validation dataset.
     """
-    valdir = os.path.join(cfgs.get('data', 'path'), 'val')
+    valdir = os.path.join(cfgs['data'].get('path'), 'val')
     logger.info(f"Creating validation set from '{valdir}'.")
     val_dataset = datasets.ImageFolder(
         valdir,
@@ -44,11 +43,11 @@ def get_val_dataset(cfgs: ConfigParser):
     return val_dataset
 
 
-def get_test_dataset(cfgs: ConfigParser):
+def get_test_dataset(cfgs: dict):
     """
     Returns the test dataset.
     """
-    testdir = os.path.join(cfgs.get('data', 'path'), 'test')
+    testdir = os.path.join(cfgs['data'].get('path'), 'test')
     logger.info(f"Creating test set from '{testdir}'.")
     test_dataset = datasets.ImageFolder(
         testdir,
@@ -61,14 +60,14 @@ def get_test_dataset(cfgs: ConfigParser):
     return test_dataset
 
 
-def load_trainset(cfgs: ConfigParser):
+def load_trainset(cfgs: dict):
     """
     Returns a DataLoader of train dataset.
     """
     dataset = get_train_dataset(cfgs)
 
-    batch_size = cfgs.getint('learning', 'batch_size')
-    dataload_workers = cfgs.getint('speed', 'dataload_workers')
+    batch_size = cfgs['learning'].get('batch_size')
+    dataload_workers = cfgs['speed'].get('dataload_workers', 1)
     logger.info(
         f"Train set is being loaded by {dataload_workers} dataloader workers. (batch_size={batch_size})"
     )
@@ -82,14 +81,14 @@ def load_trainset(cfgs: ConfigParser):
     return dataloader
 
 
-def load_valset(cfgs: ConfigParser):
+def load_valset(cfgs: dict):
     """
     Returns a DataLoader of validation dataset.
     """
     dataset = get_val_dataset(cfgs)
 
-    batch_size = cfgs.getint('learning', 'batch_size')
-    dataload_workers = cfgs.getint('speed', 'dataload_workers')
+    batch_size = cfgs['learning'].get('batch_size')
+    dataload_workers = cfgs['speed'].get('dataload_workers', 1)
     logger.info(
         f"Validation set is being loaded by {dataload_workers} dataloader workers. (batch_size={batch_size})"
     )
@@ -103,14 +102,14 @@ def load_valset(cfgs: ConfigParser):
     return dataloader
 
 
-def load_testset(cfgs: ConfigParser):
+def load_testset(cfgs: dict):
     """
     Returns a DataLoader of test dataset.
     """
     dataset = get_test_dataset(cfgs)
 
-    batch_size = cfgs.getint('learning', 'batch_size')
-    dataload_workers = cfgs.getint('speed', 'dataload_workers')
+    batch_size = cfgs['learning'].get('batch_size')
+    dataload_workers = cfgs['speed'].get('dataload_workers', 1)
     logger.info(
         f"Test set is being loaded by {dataload_workers} dataloader workers. (batch_size={batch_size})"
     )
