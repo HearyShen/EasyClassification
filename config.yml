@@ -7,8 +7,9 @@ data:
 
 model:
   arch: resnet18
-  pretrained: False
-  num_classes: 98
+  kwargs:
+    pretrained: False
+    num_classes: 98
 
 learning: 
   # general

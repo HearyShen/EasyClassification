@@ -79,8 +79,7 @@ def worker(args: ArgumentParser, cfgs: dict):
 
     # create model
     arch = cfgs["model"].get("arch")
-    kwargs = cfgs["model"].copy()
-    del kwargs["arch"]     # avoid conflicts
+    kwargs = cfgs["model"].get("kwargs")
     model = models.__dict__[arch](**kwargs)
     logger.info(f"Creating model '{arch}' with specs: {kwargs}.")
 
