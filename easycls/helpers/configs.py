@@ -11,8 +11,8 @@ def parse_cfgs(path):
 
     task = cfgs["data"].get("task")
     pretrain = cfgs["model"].get("pretrained", False)
-    num_classes = cfgs["model"].get("num-classes")
-    lr = cfgs["learning"].get("learning-rate", 0.01)
+    num_classes = cfgs["model"].get("num_classes")
+    lr = cfgs["optimizer"].get("lr", 0.01)
     ```
 
     Args:
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     task = cfgs["data"].get("task")
     pretrained = cfgs["model"].get("pretrained", False)
     num_classes = cfgs["model"].get("num_classes")
-    lr = cfgs["learning"].get("learning-rate", 0.01)
+    lr = cfgs["optimizer"].get("lr", 0.01)
 
     print(
         f'task={task}\tpretrained={pretrained}\tnum_classes={num_classes}\tlr={lr}'
