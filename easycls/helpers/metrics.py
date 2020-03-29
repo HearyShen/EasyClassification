@@ -1,7 +1,7 @@
 import torch
 
 
-def accuracy(outputs, targets, topk=(1, )):
+def accuracy(outputs, targets, topk=[1]):
     """
     Computes the accuracy over the k top predictions for the specified values of k
 
@@ -10,7 +10,7 @@ def accuracy(outputs, targets, topk=(1, )):
     Args: 
         outputs: Tensor, size of [batch_size, model_output_size], the model's output.
         targets: Tensor, size of [batch_size], ground-truth target.
-        topk:   tuple, requests the top-k accuracy.
+        topk:   list, requests the top-k accuracy.
 
     Returns:
         List, the top-k accuracy, e.g. [top1, top5]
@@ -33,7 +33,7 @@ def accuracy(outputs, targets, topk=(1, )):
         return res
 
 
-class ConfusionMatrix():
+class ConfusionMatrix:
     """
     ConfusionMatrix for every class
 

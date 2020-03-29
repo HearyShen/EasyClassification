@@ -31,9 +31,20 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
     def __str__(self):
-        fmtstr = '{name} {val' + self.fmt + '}' + self.unit + ' ({avg' + self.fmt + '}' + self.unit + ')'
+        """Return a str of meter's name, latest value and average value in format."""
+        fmtstr = '{name}: {val' + self.fmt + '}' + self.unit + ' ({avg' + self.fmt + '}' + self.unit + ')'
         return fmtstr.format(name=self.name, val=self.val, avg=self.avg)
         # return fmtstr.format(**self.__dict__)
+
+    def get_avg_str(self):
+        """Return a str of meter's name and average value in format."""
+        fmtstr = '{name}: {avg' + self.fmt + '}' + self.unit
+        return fmtstr.format(name=self.name, avg=self.avg)
+
+    @staticmethod
+    def str_all(avg_meters, seperator=', '):
+        """Returns a str of all meters' names and average values in format."""
+        return seperator.join([acc.get_avg_str() for acc in avg_meters])
 
 
 class ProgressMeter(object):
@@ -52,7 +63,7 @@ class ProgressMeter(object):
     def batch_str(self, batch):
         entries = [self.prefix + self.batch_fmtstr.format(batch)]   # 'prefix\t[{batch:3d}/100]'
         entries += [str(meter) for meter in self.meters]
-        return '\t'.join(entries)
+        return ', '.join(entries)
 
     def display(self, batch):
         print(self.batch_str(batch))
@@ -60,4 +71,4 @@ class ProgressMeter(object):
     def _get_batch_fmtstr(self, num_batches):
         num_digits = len(str(num_batches // 1))     # num_digits=3
         fmt = '{:' + str(num_digits) + 'd}'         # '{:3d}'
-        return '[' + fmt + '/' + fmt.format(num_batches) + ']'  # '[:3d/100]'
+        return '[' + fmt + '/' + fmt.format(num_batches) + ']'  # '[{:3d}/100]'

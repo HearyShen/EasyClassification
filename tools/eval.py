@@ -120,15 +120,17 @@ def worker(args: ArgumentParser, cfgs: dict):
     test_loader = task.load_testset(cfgs)
 
     logger.info(f'Start Evaluating at {helpers.readable_time()}')
+    # evaluate on validation set
     logger.info(f'Evaluating on Validation set:')
-    val_acc1, val_acc5, val_loss, val_cms = easycls.apis.validate(
+    val_accs, val_loss, val_cms = easycls.apis.validate(
         val_loader, model, lossfunc, args, cfgs)
-    logger.info(f'[Val] Acc1: {val_acc1:.2f}%, Acc5: {val_acc5:.2f}%.')
+    logger.info(f"[Eval] [Val] {helpers.AverageMeter.str_all(val_accs)}, {val_loss.get_avg_str()}.")
     # logger.info(helpers.ConfusionMatrix.str_all(val_cms))
+    # evaluate on test set
     logger.info(f'Evaluating on Test Set:')
-    test_acc1, test_acc5, test_loss, test_cms = easycls.apis.validate(
+    test_accs, test_loss, test_cms = easycls.apis.validate(
         test_loader, model, lossfunc, args, cfgs)
-    logger.info(f'[Test] Acc1: {test_acc1:.2f}%, Acc5: {test_acc5:.2f}%.')
+    logger.info(f"[Eval] [Test] {helpers.AverageMeter.str_all(test_accs)}, {test_loss.get_avg_str()}.")
     # logger.info(helpers.ConfusionMatrix.str_all(test_cms))
 
 

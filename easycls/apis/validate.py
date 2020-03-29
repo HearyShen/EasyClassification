@@ -24,11 +24,11 @@ def validate(val_loader, model, lossfunc, args, cfgs):
     """
     batch_time = AverageMeter('Time', ':6.3f', 's')
     losses = AverageMeter('Loss', ':.4e')
-    top1 = AverageMeter('Acc@1', ':6.2f', '%')
-    top5 = AverageMeter('Acc@5', ':6.2f', '%')
+    topk_options = cfgs['learning'].get('topk_accs', [1])
+    topk_accs = [AverageMeter(f'Acc@{k}', ':6.2f', '%') for k in topk_options]
     progress = ProgressMeter(
         len(val_loader),
-        [batch_time, losses, top1, top5],
+        [batch_time, losses] + topk_accs,
         prefix='Test: ')
 
     num_classes = cfgs["model"]["kwargs"].get("num_classes")
@@ -46,11 +46,11 @@ def validate(val_loader, model, lossfunc, args, cfgs):
             loss = lossfunc(outputs, targets)
 
             # measure accuracy and record loss
-            acc1, acc5 = accuracy(outputs, targets, topk=(1, 5))
+            accs = accuracy(outputs, targets, topk=topk_options)
             batch_size = targets.size(0)
             losses.update(loss.item(), batch_size)
-            top1.update(acc1*100, batch_size)
-            top5.update(acc5*100, batch_size)
+            for accs_idx in range(len(topk_accs)):
+                topk_accs[accs_idx].update(accs[accs_idx] * 100, batch_size)
 
             # update all classes' confusion matrices
             ConfusionMatrix.update_all(confusion_matrices, outputs, targets)
@@ -62,4 +62,4 @@ def validate(val_loader, model, lossfunc, args, cfgs):
             if i % args.log_freq == 0:
                 logger.info(progress.batch_str(i))
 
-    return top1.avg, top5.avg, losses.avg, confusion_matrices
+    return topk_accs, losses, confusion_matrices

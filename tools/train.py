@@ -161,24 +161,21 @@ def worker(args: ArgumentParser, cfgs: dict):
         )
 
         # train for one epoch
-        train_loss = easycls.apis.train(train_loader, model, lossfunc, optimizer,
-                                epoch, args)
+        train_accs, train_loss, train_cms = easycls.apis.train(train_loader, model, lossfunc, optimizer,
+                                epoch, args, cfgs)
+        logger.info(f"[Train] Epoch: {epoch}, {helpers.AverageMeter.str_all(train_accs)}, {train_loss.get_avg_str()}.")
 
         # evaluate on validation set
         logger.info(f'Evaluating on Validation set:')
-        val_acc1, val_acc5, val_loss, val_cms = easycls.apis.validate(
+        val_accs, val_loss, val_cms = easycls.apis.validate(
             val_loader, model, lossfunc, args, cfgs)
-        logger.info(
-            f'[Val] Epoch: {epoch},\tAcc1: {val_acc1:.2f}%, Acc5: {val_acc5:.2f}%'
-        )
+        logger.info(f"[Eval] [Val] Epoch: {epoch}, {helpers.AverageMeter.str_all(train_accs)}, {val_loss.get_avg_str()}.")
 
         # evaluate on test set
         logger.info(f'Evaluating on Test Set:')
-        test_acc1, test_acc5, test_loss, test_cms = easycls.apis.validate(
+        test_accs, test_loss, test_cms = easycls.apis.validate(
             test_loader, model, lossfunc, args, cfgs)
-        logger.info(
-            f'[Test] Epoch: {epoch},\tAcc1: {test_acc1:.2f}%, Acc5: {test_acc5:.2f}%'
-        )
+        logger.info(f"[Eval] [Test] Epoch: {epoch}, {helpers.AverageMeter.str_all(train_accs)}, {test_loss.get_avg_str()}.")
 
         # adjust the learning rate
         lr_scheduler.step()
@@ -189,6 +186,7 @@ def worker(args: ArgumentParser, cfgs: dict):
             model_state_dict = model.module.state_dict()
         elif args.device == 'cpu':
             model_state_dict = model.state_dict()
+        val_acc1 = val_accs[0].avg
         is_best = val_acc1 > best_acc1
         best_acc1 = max(val_acc1, best_acc1)
         helpers.save_checkpoint(
