@@ -1,28 +1,24 @@
 import os
 import time
-import datetime
 from argparse import ArgumentParser
 import importlib
 import torch
 import torch.backends.cudnn as cudnn
-import torch.nn.modules.loss as loss
 
 # insert root dir path to sys.path to import easycls
 import sys
 sys.path.insert(0,
                 os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
-import easycls.apis as apis
-import easycls.models as models
+import easycls
 import easycls.helpers as helpers
-import easycls.learning as learning
 
 
 def parse_args():
     argparser = ArgumentParser(description="EasyClassification")
     argparser.add_argument('-c',
                            '--config',
-                           default='config.ini',
+                           default='config.yml',
                            type=str,
                            metavar='PATH',
                            help='configuration file path')
@@ -67,10 +63,10 @@ def worker(args: ArgumentParser, cfgs: dict):
 
     # init logger
     taskname = cfgs['data'].get('task')
-    arch = cfgs['model'].get('arch')
+    model_arch = cfgs['model'].get('arch')
     logger = helpers.init_root_logger(filename=os.path.join(
         'logs',
-        f"{taskname}_{arch}_train_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log"
+        f"{taskname}_{model_arch}_train_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log"
     ))
     logger.info(f"Current task (dataset): '{taskname}'.")
 
@@ -78,10 +74,10 @@ def worker(args: ArgumentParser, cfgs: dict):
     cuda_device_count = helpers.check_cuda()
 
     # create model
-    arch = cfgs["model"].get("arch")
-    kwargs = cfgs["model"].get("kwargs")
-    model = models.__dict__[arch](**kwargs)
-    logger.info(f"Creating model '{arch}' with specs: {kwargs}.")
+    model_arch = cfgs["model"].get("arch")
+    model_kwargs = cfgs["model"].get("kwargs")
+    model = easycls.models.__dict__[model_arch](**model_kwargs if model_kwargs else {})
+    logger.info(f"Creating model '{model_arch}' with specs: {model_kwargs}.")
 
     # resume as specified
     start_epoch = 0
@@ -113,12 +109,21 @@ def worker(args: ArgumentParser, cfgs: dict):
         logger.info("Using DataParallel for GPU(s) CUDA accelerated training.")
 
     # create optimizer after model parameters being in the consistent location
-    optimizer = learning.create_optimizer(model.parameters(), cfgs)
+    optimizer_arch = cfgs['optimizer'].get('arch')
+    optimizer_kwargs = cfgs['optimizer'].get('kwargs')
+    optimizer = easycls.optims.__dict__[optimizer_arch](
+        model.parameters(), **optimizer_kwargs if optimizer_kwargs else {})
+    logger.info(
+        f"Creating model '{optimizer_arch}' with specs: {optimizer_kwargs}.")
     if args.resume:
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
     # create the lossfunc(loss function)
-    lossfunc = learning.create_lossfunc(cfgs).to(torch.device(args.device))
+    loss_arch = cfgs['loss'].get('arch')
+    loss_kwargs = cfgs['loss'].get('kwargs')
+    lossfunc = easycls.modules.__dict__[loss_arch](
+        **loss_kwargs if loss_kwargs else {}).to(torch.device(args.device))
+    logger.info(f"Creating loss '{loss_arch}' with specs: {loss_kwargs}.")
 
     # speedup for batches with fixed-size input
     cudnn.benchmark = cfgs['speed'].get('cudnn_benchmark', False)
@@ -136,27 +141,32 @@ def worker(args: ArgumentParser, cfgs: dict):
     epoch_time = helpers.AverageMeter('Tepoch', ':.3f', 's')
 
     # create lr_scheduler to operate lr decay
-    scheduler = learning.create_lr_scheduler(optimizer,
-                                             cfgs,
-                                             last_epoch=start_epoch - 1)
+    lr_scheduler_arch = cfgs['lr_scheduler'].get('arch')
+    lr_scheduler_kwargs = cfgs['lr_scheduler'].get('kwargs')
+    lr_scheduler = easycls.optims.lr_schedulers.__dict__[lr_scheduler_arch](
+        optimizer,
+        **lr_scheduler_kwargs if lr_scheduler_kwargs else {},
+        last_epoch=start_epoch - 1)
+    logger.info(
+        f"Creating loss '{lr_scheduler_arch}' with specs: {lr_scheduler_kwargs}."
+    )
     if args.resume:
-        scheduler.load_state_dict(checkpoint['lr_scheduler_state_dict'])
+        lr_scheduler.load_state_dict(checkpoint['lr_scheduler_state_dict'])
 
     total_epoch = cfgs['learning'].get('epochs', 1)
     for epoch in range(start_epoch, total_epoch):
         tic = time.time()
-        # lr = helpers.adjust_learning_rate(optimizer, epoch, cfgs)
         logger.info(
-            f'Starting epoch: {epoch}/{total_epoch}, learning-rate: {scheduler.get_last_lr()}.'
+            f'Starting epoch: {epoch}/{total_epoch}, learning-rate: {lr_scheduler.get_last_lr()}.'
         )
 
         # train for one epoch
-        train_loss = apis.train(train_loader, model, lossfunc, optimizer,
+        train_loss = easycls.apis.train(train_loader, model, lossfunc, optimizer,
                                 epoch, args)
 
         # evaluate on validation set
         logger.info(f'Evaluating on Validation set:')
-        val_acc1, val_acc5, val_loss, val_cms = apis.validate(
+        val_acc1, val_acc5, val_loss, val_cms = easycls.apis.validate(
             val_loader, model, lossfunc, args, cfgs)
         logger.info(
             f'[Val] Epoch: {epoch},\tAcc1: {val_acc1:.2f}%, Acc5: {val_acc5:.2f}%'
@@ -164,14 +174,14 @@ def worker(args: ArgumentParser, cfgs: dict):
 
         # evaluate on test set
         logger.info(f'Evaluating on Test Set:')
-        test_acc1, test_acc5, test_loss, test_cms = apis.validate(
+        test_acc1, test_acc5, test_loss, test_cms = easycls.apis.validate(
             test_loader, model, lossfunc, args, cfgs)
         logger.info(
             f'[Test] Epoch: {epoch},\tAcc1: {test_acc1:.2f}%, Acc5: {test_acc5:.2f}%'
         )
 
         # adjust the learning rate
-        scheduler.step()
+        lr_scheduler.step()
 
         # remember best acc@1 and save checkpoint
         if args.device == 'cuda':
@@ -183,14 +193,14 @@ def worker(args: ArgumentParser, cfgs: dict):
         best_acc1 = max(val_acc1, best_acc1)
         helpers.save_checkpoint(
             {
-                'arch': arch,
+                'arch': model_arch,
                 'epoch': epoch + 1,
                 'model_state_dict': model_state_dict,
                 'best_acc1': best_acc1,
                 'optimizer_state_dict': optimizer.state_dict(),
-                'lr_scheduler_state_dict': scheduler.state_dict(),
+                'lr_scheduler_state_dict': lr_scheduler.state_dict(),
                 'timestamp': time.time()
-            }, is_best, f"{taskname}_{arch}")
+            }, is_best, f"{taskname}_{model_arch}")
 
         # measure the elapsed time
         toc = time.time()

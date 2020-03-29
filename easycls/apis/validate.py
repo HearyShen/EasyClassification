@@ -31,7 +31,7 @@ def validate(val_loader, model, lossfunc, args, cfgs):
         [batch_time, losses, top1, top5],
         prefix='Test: ')
 
-    num_classes = cfgs["model"].get("num_classes")
+    num_classes = cfgs["model"]["kwargs"].get("num_classes")
     confusion_matrices = [ConfusionMatrix(index) for index in range(num_classes)]
 
     # switch to evaluate mode

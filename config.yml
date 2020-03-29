@@ -6,9 +6,9 @@ data:
   num_classes: 98
 
 model:
-  arch: resnet18
+  arch: fresnet18
   kwargs:
-    pretrained: False
+    pretrained: True
     num_classes: 98
 
 learning: 
@@ -17,18 +17,21 @@ learning:
   batch_size: 32
 
 loss: 
-  loss_function: CrossEntropyLoss
+  arch: CrossEntropyLoss
+  kwargs: 
 
 optimizer: 
-  algorithm: SGD
-  lr: 0.01
-  momentum: 0.9
-  weight_decay: 1.0e-4
+  arch: SGD
+  kwargs:
+    lr: 0.01
+    momentum: 0.9
+    weight_decay: 1.0e-4
 
 lr_scheduler: 
-  decay_mode: StepLR
-  step_size: 30
-  gamma: 0.1
+  arch: StepLR
+  kwargs:
+    step_size: 30
+    gamma: 0.1
 
 speed: 
   dataload_workers: 2

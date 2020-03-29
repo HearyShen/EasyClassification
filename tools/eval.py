@@ -4,24 +4,21 @@ from argparse import ArgumentParser
 import importlib
 import torch
 import torch.backends.cudnn as cudnn
-import torch.nn.modules.loss as loss
 
 # insert root dir path to sys.path to import easycls
 import sys
 sys.path.insert(0,
                 os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
-import easycls.apis as apis
-import easycls.models as models
+import easycls
 import easycls.helpers as helpers
-import easycls.learning as learning
 
 
 def parse_args():
     argparser = ArgumentParser(description="EasyClassification")
     argparser.add_argument('-c',
                            '--config',
-                           default='config.ini',
+                           default='config.yml',
                            type=str,
                            metavar='PATH',
                            help='configuration file path')
@@ -61,10 +58,10 @@ def main():
 def worker(args: ArgumentParser, cfgs: dict):
     # init logger
     taskname = cfgs['data'].get('task')
-    arch = cfgs['model'].get('arch')
+    model_arch = cfgs['model'].get('arch')
     logger = helpers.init_root_logger(filename=os.path.join(
         'logs',
-        f"{taskname}_{arch}_eval_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log"
+        f"{taskname}_{model_arch}_eval_{helpers.format_time(format=r'%Y%m%d-%H%M%S')}.log"
     ))
     logger.info(f"Current task (dataset): '{taskname}'.")
 
@@ -72,12 +69,10 @@ def worker(args: ArgumentParser, cfgs: dict):
     cuda_device_count = helpers.check_cuda()
 
     # create model
-    if cfgs['model'].get('pretrained'):
-        logger.info(f"Using pre-trained model '{arch}'.")
-        model = models.__dict__[arch](pretrained=True)
-    else:
-        logger.info(f"Creating model '{arch}'.")
-        model = models.__dict__[arch]()
+    model_arch = cfgs["model"].get("arch")
+    model_kwargs = cfgs["model"].get("kwargs")
+    model = easycls.models.__dict__[model_arch](**model_kwargs if model_kwargs else {})
+    logger.info(f"Creating model '{model_arch}' with specs: {model_kwargs}.")
 
     # resume as specified
     if args.resume:
@@ -107,7 +102,11 @@ def worker(args: ArgumentParser, cfgs: dict):
             "Using DataParallel for GPU(s) CUDA accelerated evaluating.")
 
     # create the lossfunc(loss function)
-    lossfunc = learning.create_lossfunc(cfgs).to(torch.device(args.device))
+    loss_arch = cfgs['loss'].get('arch')
+    loss_kwargs = cfgs['loss'].get('kwargs')
+    lossfunc = easycls.modules.__dict__[loss_arch](
+        **loss_kwargs if loss_kwargs else {}).to(torch.device(args.device))
+    logger.info(f"Creating loss '{loss_arch}' with specs: {loss_kwargs}.")
 
     # speedup for batches with fixed-size input
     cudnn.benchmark = cfgs['speed'].get('cudnn_benchmark', False)
@@ -122,12 +121,12 @@ def worker(args: ArgumentParser, cfgs: dict):
 
     logger.info(f'Start Evaluating at {helpers.readable_time()}')
     logger.info(f'Evaluating on Validation set:')
-    val_acc1, val_acc5, val_loss, val_cms = apis.validate(
+    val_acc1, val_acc5, val_loss, val_cms = easycls.apis.validate(
         val_loader, model, lossfunc, args, cfgs)
     logger.info(f'[Val] Acc1: {val_acc1:.2f}%, Acc5: {val_acc5:.2f}%.')
     # logger.info(helpers.ConfusionMatrix.str_all(val_cms))
     logger.info(f'Evaluating on Test Set:')
-    test_acc1, test_acc5, test_loss, test_cms = apis.validate(
+    test_acc1, test_acc5, test_loss, test_cms = easycls.apis.validate(
         test_loader, model, lossfunc, args, cfgs)
     logger.info(f'[Test] Acc1: {test_acc1:.2f}%, Acc5: {test_acc5:.2f}%.')
     # logger.info(helpers.ConfusionMatrix.str_all(test_cms))
