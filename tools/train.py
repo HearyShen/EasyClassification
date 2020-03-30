@@ -58,7 +58,7 @@ def main():
 best_acc1 = 0
 
 
-def worker(args: ArgumentParser, cfgs: dict):
+def worker(args, cfgs: dict):
     global best_acc1
 
     # init logger

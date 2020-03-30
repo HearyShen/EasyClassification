@@ -55,7 +55,7 @@ def main():
     worker(args, cfgs)
 
 
-def worker(args: ArgumentParser, cfgs: dict):
+def worker(args, cfgs: dict):
     # init logger
     taskname = cfgs['data'].get('task')
     model_arch = cfgs['model'].get('arch')
