@@ -128,12 +128,12 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# VSCode settings
+# Editors and IDEs settings
 .vscode/
+.vs/
+.idea/
 
 # Project, Debug and Test
 *.pth.tar
 *.pt
-
-# Pycharm settings
-.idea/
+.logs/
