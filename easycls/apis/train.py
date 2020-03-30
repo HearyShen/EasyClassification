@@ -21,7 +21,7 @@ def train(train_loader, model, lossfunc, optimizer, epoch, args, cfgs):
     batch_time = AverageMeter('Tbatch', ':6.3f', 's')
     data_time = AverageMeter('Tdata', ':6.3f', 's')
     losses = AverageMeter('Loss', ':.4e')
-    topk_options = cfgs['learning'].get('topk_accs', [1])
+    topk_options = cfgs['basic'].get('topk_accs', [1])
     topk_accs = [AverageMeter(f'Acc@{k}', ':6.2f', '%') for k in topk_options]
     progress = ProgressMeter(
         len(train_loader),

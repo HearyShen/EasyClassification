@@ -1,17 +1,14 @@
-# config.ini
+############################################################
+# config.yml
+# Configurations of [EasyClassification(easycls)](https://github.com/HearyShen/EasyClassification)
+# Author: HearyShen
+# Date: 2020.3.30
+# Comments: 
+############################################################
 
-data:
-  task: image
-  path: D:\Datasets\ForestrySecurity\insects98
-  num_classes: 98
-
-model:
-  arch: fresnet18
-  kwargs:
-    pretrained: True
-    num_classes: 98
-
-learning: 
+# Basic configurations
+# basic configurations for training, evaluating and etc.
+basic: 
   # general
   epochs: 90
   batch_size: 32
@@ -19,10 +16,30 @@ learning:
     - 1     # top-1 accuracy is essential
     - 5
 
+
+# Dataset configurations
+# dataset's task, root path 
+data:
+  task: image
+  path: D:\Datasets\ForestrySecurity\insects98
+
+
+# Model configurations
+# model's architecture and keyword-arguments
+model:
+  arch: fresnet18
+  kwargs:
+    pretrained: True
+    num_classes: 98
+
+# Loss function configurations
+# loss function's architecture and keyword-arguments
 loss: 
   arch: CrossEntropyLoss
   kwargs: 
 
+# Optimizer configurations
+# optimizer's architecture and keyword-arguments
 optimizer: 
   arch: SGD
   kwargs:
@@ -30,12 +47,17 @@ optimizer:
     momentum: 0.9
     weight_decay: 1.0e-4
 
+# Learning-rate Scheduler configurations
+# learning-rate scheduler's architecture and keyword-arguments
 lr_scheduler: 
   arch: StepLR
   kwargs:
     step_size: 30
     gamma: 0.1
 
+
+# Speed configurations
+# running speed related configurations
 speed: 
   dataload_workers: 2
   cudnn_benchmark: True   # cudnn-benchmark: speedup for fixed-size input

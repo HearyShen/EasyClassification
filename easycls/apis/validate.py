@@ -24,7 +24,7 @@ def validate(val_loader, model, lossfunc, args, cfgs):
     """
     batch_time = AverageMeter('Time', ':6.3f', 's')
     losses = AverageMeter('Loss', ':.4e')
-    topk_options = cfgs['learning'].get('topk_accs', [1])
+    topk_options = cfgs['basic'].get('topk_accs', [1])
     topk_accs = [AverageMeter(f'Acc@{k}', ':6.2f', '%') for k in topk_options]
     progress = ProgressMeter(
         len(val_loader),

@@ -66,7 +66,7 @@ def load_trainset(cfgs: dict):
     """
     dataset = get_train_dataset(cfgs)
 
-    batch_size = cfgs['learning'].get('batch_size')
+    batch_size = cfgs['basic'].get('batch_size')
     dataload_workers = cfgs['speed'].get('dataload_workers', 1)
     logger.info(
         f"Train set is being loaded by {dataload_workers} dataloader workers. (batch_size={batch_size})"
@@ -87,7 +87,7 @@ def load_valset(cfgs: dict):
     """
     dataset = get_val_dataset(cfgs)
 
-    batch_size = cfgs['learning'].get('batch_size')
+    batch_size = cfgs['basic'].get('batch_size')
     dataload_workers = cfgs['speed'].get('dataload_workers', 1)
     logger.info(
         f"Validation set is being loaded by {dataload_workers} dataloader workers. (batch_size={batch_size})"
@@ -108,7 +108,7 @@ def load_testset(cfgs: dict):
     """
     dataset = get_test_dataset(cfgs)
 
-    batch_size = cfgs['learning'].get('batch_size')
+    batch_size = cfgs['basic'].get('batch_size')
     dataload_workers = cfgs['speed'].get('dataload_workers', 1)
     logger.info(
         f"Test set is being loaded by {dataload_workers} dataloader workers. (batch_size={batch_size})"

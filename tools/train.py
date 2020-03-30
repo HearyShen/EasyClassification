@@ -153,7 +153,7 @@ def worker(args: ArgumentParser, cfgs: dict):
     if args.resume:
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler_state_dict'])
 
-    total_epoch = cfgs['learning'].get('epochs', 1)
+    total_epoch = cfgs['basic'].get('epochs', 1)
     for epoch in range(start_epoch, total_epoch):
         tic = time.time()
         logger.info(
