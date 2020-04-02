@@ -114,7 +114,7 @@ def worker(args, cfgs: dict):
     optimizer = easycls.optims.__dict__[optimizer_arch](
         model.parameters(), **optimizer_kwargs if optimizer_kwargs else {})
     logger.info(
-        f"Creating model '{optimizer_arch}' with specs: {optimizer_kwargs}.")
+        f"Creating optimizer '{optimizer_arch}' with specs: {optimizer_kwargs}.")
     if args.resume:
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
@@ -148,7 +148,7 @@ def worker(args, cfgs: dict):
         **lr_scheduler_kwargs if lr_scheduler_kwargs else {},
         last_epoch=start_epoch - 1)
     logger.info(
-        f"Creating loss '{lr_scheduler_arch}' with specs: {lr_scheduler_kwargs}."
+        f"Creating learning-rate scheduler '{lr_scheduler_arch}' with specs: {lr_scheduler_kwargs}."
     )
     if args.resume:
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler_state_dict'])
