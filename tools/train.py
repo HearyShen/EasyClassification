@@ -163,19 +163,19 @@ def worker(args, cfgs: dict):
         # train for one epoch
         train_accs, train_loss, train_cms = easycls.apis.train(train_loader, model, lossfunc, optimizer,
                                 epoch, args, cfgs)
-        logger.info(f"[Train] Epoch: {epoch}, {helpers.AverageMeter.str_all(train_accs)}, {train_loss.get_avg_str()}.")
+        logger.info(f"[Eval] [Train] Epoch: {epoch}, {helpers.AverageMeter.str_all(train_accs)}, {train_loss.get_avg_str()}.")
 
         # evaluate on validation set
         logger.info(f'Evaluating on Validation set:')
         val_accs, val_loss, val_cms = easycls.apis.validate(
             val_loader, model, lossfunc, args, cfgs)
-        logger.info(f"[Eval] [Val] Epoch: {epoch}, {helpers.AverageMeter.str_all(train_accs)}, {val_loss.get_avg_str()}.")
+        logger.info(f"[Eval] [Val] Epoch: {epoch}, {helpers.AverageMeter.str_all(val_accs)}, {val_loss.get_avg_str()}.")
 
         # evaluate on test set
         logger.info(f'Evaluating on Test Set:')
         test_accs, test_loss, test_cms = easycls.apis.validate(
             test_loader, model, lossfunc, args, cfgs)
-        logger.info(f"[Eval] [Test] Epoch: {epoch}, {helpers.AverageMeter.str_all(train_accs)}, {test_loss.get_avg_str()}.")
+        logger.info(f"[Eval] [Test] Epoch: {epoch}, {helpers.AverageMeter.str_all(test_accs)}, {test_loss.get_avg_str()}.")
 
         # adjust the learning rate
         lr_scheduler.step()
