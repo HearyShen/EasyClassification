@@ -1,5 +1,5 @@
 import time
-from ..helpers import AverageMeter, ProgressMeter, accuracy, ConfusionMatrix, init_module_logger
+from ..helpers import AverageMeter, ProgressMeter, accuracy, MultiConfusionMatrices, init_module_logger
 
 logger = init_module_logger(__name__)
 
@@ -29,7 +29,7 @@ def train(train_loader, model, lossfunc, optimizer, epoch, args, cfgs):
         prefix="Epoch: [{}]".format(epoch))
 
     num_classes = cfgs["model"]["kwargs"].get("num_classes")
-    confusion_matrices = [ConfusionMatrix(index) for index in range(num_classes)]
+    mcms = MultiConfusionMatrices(num_classes)
 
     # switch to train mode
     model.train()
@@ -52,7 +52,8 @@ def train(train_loader, model, lossfunc, optimizer, epoch, args, cfgs):
             topk_accs[accs_idx].update(accs[accs_idx] * 100, batch_size)
 
         # update all classes' confusion matrices
-        ConfusionMatrix.update_all(confusion_matrices, outputs, targets)
+        scores, predictions = outputs.max(dim=1)
+        mcms.update(predictions, targets)
 
         # compute gradient and do optimizing step
         optimizer.zero_grad()
@@ -66,4 +67,4 @@ def train(train_loader, model, lossfunc, optimizer, epoch, args, cfgs):
         if i % args.log_freq == 0:
             logger.info(progress.batch_str(i))
     
-    return topk_accs, losses, confusion_matrices
+    return topk_accs, losses, mcms

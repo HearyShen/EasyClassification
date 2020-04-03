@@ -1,7 +1,7 @@
 import time
 import torch
 
-from ..helpers import AverageMeter, ProgressMeter, accuracy, ConfusionMatrix, init_module_logger
+from ..helpers import AverageMeter, ProgressMeter, accuracy, MultiConfusionMatrices, init_module_logger
 
 logger = init_module_logger(__name__)
 
@@ -32,7 +32,7 @@ def validate(val_loader, model, lossfunc, args, cfgs):
         prefix='Test: ')
 
     num_classes = cfgs["model"]["kwargs"].get("num_classes")
-    confusion_matrices = [ConfusionMatrix(index) for index in range(num_classes)]
+    mcms = MultiConfusionMatrices(num_classes)
 
     # switch to evaluate mode
     model.eval()
@@ -53,7 +53,8 @@ def validate(val_loader, model, lossfunc, args, cfgs):
                 topk_accs[accs_idx].update(accs[accs_idx] * 100, batch_size)
 
             # update all classes' confusion matrices
-            ConfusionMatrix.update_all(confusion_matrices, outputs, targets)
+            scores, predictions = outputs.max(dim=1)
+            mcms.update(predictions, targets)
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -62,4 +63,4 @@ def validate(val_loader, model, lossfunc, args, cfgs):
             if i % args.log_freq == 0:
                 logger.info(progress.batch_str(i))
 
-    return topk_accs, losses, confusion_matrices
+    return topk_accs, losses, mcms

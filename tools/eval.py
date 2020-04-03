@@ -7,8 +7,7 @@ import torch.backends.cudnn as cudnn
 
 # insert root dir path to sys.path to import easycls
 import sys
-sys.path.insert(0,
-                os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')))
 
 import easycls
 import easycls.helpers as helpers
@@ -125,13 +124,14 @@ def worker(args, cfgs: dict):
     val_accs, val_loss, val_cms = easycls.apis.validate(
         val_loader, model, lossfunc, args, cfgs)
     logger.info(f"[Eval] [Val] {helpers.AverageMeter.str_all(val_accs)}, {val_loss.get_avg_str()}.")
-    # logger.info(helpers.ConfusionMatrix.str_all(val_cms))
+    logger.info(f"[Eval] [Val] \n{val_cms}")
+    
     # evaluate on test set
     logger.info(f'Evaluating on Test Set:')
     test_accs, test_loss, test_cms = easycls.apis.validate(
         test_loader, model, lossfunc, args, cfgs)
     logger.info(f"[Eval] [Test] {helpers.AverageMeter.str_all(test_accs)}, {test_loss.get_avg_str()}.")
-    # logger.info(helpers.ConfusionMatrix.str_all(test_cms))
+    logger.info(f"[Eval] [Test] \n{test_cms}")
 
 
 if __name__ == "__main__":
