@@ -273,27 +273,44 @@ class MultiConfusionMatrices:
 
         return self
 
+    def to_str(self, digits=4):
+        """
+        Convert the MultiConfusionMatrices instance to table-format report str.
+
+        Args: 
+            digits (int): digits of float to output. (default: 4)
+
+        Returns:
+            report (str): a table-format report str.
+        """
+        headers = ["Accuracy", "Precision", "Recall", "F1-score", "Samples"]
+        width = max(max(len(head) for head in headers), digits+2, 10)
+        head_fmt = '{:>{width}s} ' + ' {:>{width}}' * len(headers) + '\n'
+        row_fmt = '{:>{width}s} ' + ' {:>{width}.{digits}f}' * 4 + ' {:>{width}}'
+        rows_classes = [
+            (str(cm.class_index), cm.accuracy, cm.precision, cm.recall, cm.f1, cm.AP) for cm in self.cms
+        ]
+        rows_conclusions = [
+            ('Micro', self.accuracy, self.micro_precision, self.micro_recall, self.micro_f1, self.total),
+            ('Weighted', float('nan'), self.weighted_precision, self.weighted_recall, self.weighted_f1, self.total),
+            ('Macro', float('nan'), self.macro_precision, self.macro_recall, self.macro_f1, self.total)
+        ]
+
+        report = head_fmt.format('', *headers, width=width)
+        report += '\n'.join([row_fmt.format(*row, width=width, digits=digits) for row in rows_classes])
+        report += '\n\n'
+        report += head_fmt.format('', *headers, width=width)
+        report += '\n'.join([row_fmt.format(*row, width=width, digits=digits) for row in rows_conclusions])
+        return report
+    
     def __str__(self):
         """
         Convert all the confusion matrices to string
         """
-        # cms_str = '\n'.join([str(cm) for cm in self.cms])
-
-        cms_table_head = f"Class\tAcc\tPrec\tRec\tF1\tSamples"
-        cms_table_classes = '\n'.join([f"{cm.class_index}\t{cm.accuracy:.3f}\t{cm.precision:.3f}\t{cm.recall:.3f}\t{cm.f1:.3f}\t{cm.AP}" for cm in self.cms])
-        cms_table_micro = f"micro\t{self.accuracy:.3f}\t{self.micro_precision:.3f}\t{self.micro_recall:.3f}\t{self.micro_f1:.3f}\t{self.total}"
-        cms_table_weighted = f"weight\t-\t{self.weighted_precision:.3f}\t{self.weighted_recall:.3f}\t{self.weighted_f1:.3f}\t{self.total}"
-        cms_table_macro = f"macro\t-\t{self.macro_precision:.3f}\t{self.macro_recall:.3f}\t{self.macro_f1:.3f}\t{self.total}"
-        cms_table = '\n'.join([cms_table_head, cms_table_classes, ' ', cms_table_micro, cms_table_weighted, cms_table_macro])
-
-        # cms_str_all = [cms_str, cms_table]
-
-        return cms_table
-
+        return self.to_str()
 
 # Unit Test
 if __name__ == "__main__":
-    # from .meters import AverageMeter
 
     batch_size = 64  # if batch_size, it is highly possible to encounter division-by-zero error (precision, recall, F1)
     class_count = 10
