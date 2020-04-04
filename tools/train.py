@@ -156,7 +156,7 @@ def worker(args, cfgs: dict):
     for epoch in range(start_epoch, total_epoch):
         tic = time.time()
         logger.info(
-            f'Starting epoch: {epoch}/{total_epoch}, learning-rate: {lr_scheduler.get_last_lr()}.'
+            f'Starting epoch: {epoch}/{total_epoch}, lr: {lr_scheduler.get_last_lr()}, time: {helpers.readable_time()}.'
         )
 
         # train for one epoch
