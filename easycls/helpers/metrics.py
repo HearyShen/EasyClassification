@@ -126,31 +126,59 @@ class ConfusionMatrix:
 
         return self
 
-    def __str__(self):
+    def to_str(self, digits=4):
         """
-        Output the Confusion Matrix in format string
+        Convert the ConfusionMatrix instance to a table-format report str.
 
         e.g.
 
         ```
-        Confusion Matrix of class 0
-                AP      AN      Sum
-        PP      16      15      31
-        PN      31      66      97
-        Sum     47      81
-        Total: 128
-        ```
-        """
-        cm_title = f"Confusion Matrix of class '{self.class_index}':"
-        cm_line1 = f"\tAP\tAN\tSum"
-        cm_line2 = f"PP\t{self.TP}\t{self.FP}\t{self.TP+self.FP}"
-        cm_line3 = f"PN\t{self.FN}\t{self.TN}\t{self.FN+self.TN}"
-        cm_line4 = f"Sum\t{self.TP+self.FN}\t{self.FP+self.TN}\t{self.total}"
-        cm_report = f"Report C{self.class_index}: Acc={self.accuracy*100:.3f}%, Prec={self.precision*100:.3f}%, Rec={self.recall*100:.3f}%, F1={self.f1:.3f}"
+        Confusion Matrix of class '0':
+                         AP         AN    Samples
+             PP           1          8          9
+             PN          10        109        119
+        Samples          11        117
 
-        cm_str = '\n'.join(
-            [cm_title, cm_line1, cm_line2, cm_line3, cm_line4, cm_report])
-        return cm_str
+                   Accuracy  Precision     Recall   F1-score    Samples
+        Class 0      0.0078     0.1111     0.0909     0.1000        128
+        ```
+
+        Args: 
+            digits (int): digits of float to output. (default: 4)
+
+        Returns:
+            report (str): a table-format report str.
+        """
+        headers = ["AP", "AN", "Samples"]
+        width = max(max(len(head) for head in headers), digits+2, 10)
+        head_fmt = '{:>{width}s} ' + ' {:>{width}}' * len(headers) + '\n'
+        row_fmt = '{:>{width}s} ' + ' {:>{width}}' * len(headers)
+
+        rows = [
+            ('PP', self.TP, self.FP, self.PP),
+            ('PN', self.FN, self.TN, self.PN),
+            ('Samples', self.AP, self.AN, '')
+        ]
+
+        report = f"Confusion Matrix of class '{self.class_index}':\n"
+        report += head_fmt.format('', *headers, width=width)
+        report += '\n'.join([row_fmt.format(*row, width=width) for row in rows]) + '\n\n'
+
+        metrics_headers = ["Accuracy", "Precision", "Recall", "F1-score", "Samples"]
+        metrics_head_fmt = '{:>{width}s} ' + ' {:>{width}}' * len(metrics_headers) + '\n'
+        metrics_row_fmt = '{:>{width}s} ' + ' {:>{width}.{digits}f}' * 4 + ' {:>{width}}'
+        metric_row = (f'Class {self.class_index}', self.accuracy, self.precision, self.recall, self.f1, self.total)
+
+        report += metrics_head_fmt.format('', *metrics_headers, width=width)
+        report += metrics_row_fmt.format(*metric_row, width=width, digits=digits)
+        
+        return report
+
+    def __str__(self):
+        """
+        Convert the ConfusionMatrix instance to a table-format report str.
+        """
+        return self.to_str()
 
     def get_accuracy(self):
         """
@@ -319,7 +347,7 @@ if __name__ == "__main__":
     acc = 0
     total = 0
     mcms = MultiConfusionMatrices(class_count)
-    for i in range(10):
+    for i in range(2):
         outputs = torch.rand(batch_size, class_count)
         # predictions = torch.randint(0, class_count, [batch_size])
         scores, predictions = outputs.max(dim=1)
@@ -337,3 +365,5 @@ if __name__ == "__main__":
         print(acc1, total)
 
         assert mcms.accuracy == acc1
+
+    print(mcms.cms[0])
