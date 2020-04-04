@@ -163,21 +163,21 @@ def worker(args, cfgs: dict):
         train_accs, train_loss, train_cms = easycls.apis.train(train_loader, model, lossfunc, optimizer,
                                 epoch, args, cfgs)
         logger.info(f"[Eval] [Train] Epoch: {epoch}, {helpers.AverageMeter.str_all(train_accs)}, {train_loss.get_avg_str()}.")
-        logger.info(f"[Eval] [Train] \n{train_cms}")
+        logger.info(f"[Eval] [Train] Confusion matrices of '{train_cms.num_classes}' classes: \n{train_cms}")
 
         # evaluate on validation set
         logger.info(f'Evaluating on Validation set:')
         val_accs, val_loss, val_cms = easycls.apis.validate(
             val_loader, model, lossfunc, args, cfgs)
         logger.info(f"[Eval] [Val] Epoch: {epoch}, {helpers.AverageMeter.str_all(val_accs)}, {val_loss.get_avg_str()}.")
-        logger.info(f"[Eval] [Val] \n{val_cms}")
+        logger.info(f"[Eval] [Val] Confusion matrices of '{val_cms.num_classes}' classes: \n{val_cms}")
 
         # evaluate on test set
         logger.info(f'Evaluating on Test Set:')
         test_accs, test_loss, test_cms = easycls.apis.validate(
             test_loader, model, lossfunc, args, cfgs)
         logger.info(f"[Eval] [Test] Epoch: {epoch}, {helpers.AverageMeter.str_all(test_accs)}, {test_loss.get_avg_str()}.")
-        logger.info(f"[Eval] [Test] \n{test_cms}")
+        logger.info(f"[Eval] [Test] Confusion matrices of '{test_accs.num_classes}' classes: \n{test_cms}")
 
         # adjust the learning rate
         lr_scheduler.step()

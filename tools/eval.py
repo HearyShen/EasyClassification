@@ -124,14 +124,14 @@ def worker(args, cfgs: dict):
     val_accs, val_loss, val_cms = easycls.apis.validate(
         val_loader, model, lossfunc, args, cfgs)
     logger.info(f"[Eval] [Val] {helpers.AverageMeter.str_all(val_accs)}, {val_loss.get_avg_str()}.")
-    logger.info(f"[Eval] [Val] \n{val_cms}")
+    logger.info(f"[Eval] [Val] Confusion matrices of '{val_cms.num_classes}' classes: \n{val_cms}")
     
     # evaluate on test set
     logger.info(f'Evaluating on Test Set:')
     test_accs, test_loss, test_cms = easycls.apis.validate(
         test_loader, model, lossfunc, args, cfgs)
     logger.info(f"[Eval] [Test] {helpers.AverageMeter.str_all(test_accs)}, {test_loss.get_avg_str()}.")
-    logger.info(f"[Eval] [Test] \n{test_cms}")
+    logger.info(f"[Eval] [Test] Confusion matrices of '{test_cms.num_classes}' classes: \n{test_cms}")
 
 
 if __name__ == "__main__":
