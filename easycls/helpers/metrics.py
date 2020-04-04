@@ -238,6 +238,7 @@ class MultiConfusionMatrices:
         """
         assert predictions.size() == targets.size()
         with torch.no_grad():
+            self.reset()    # NOTE: ConfusionMatrix has already accumulated values
             for cm in self.cms:
                 # update binary confusion matrix
                 cm.update(predictions, targets)
@@ -292,9 +293,15 @@ class MultiConfusionMatrices:
 
 # Unit Test
 if __name__ == "__main__":
+    # from .meters import AverageMeter
+
     batch_size = 64  # if batch_size, it is highly possible to encounter division-by-zero error (precision, recall, F1)
     class_count = 10
 
+    acc_sum = 0
+    acc = 0
+    total = 0
+    mcms = MultiConfusionMatrices(class_count)
     for i in range(10):
         outputs = torch.rand(batch_size, class_count)
         # predictions = torch.randint(0, class_count, [batch_size])
@@ -302,11 +309,14 @@ if __name__ == "__main__":
         targets = torch.randint(0, class_count, [batch_size])
         print(f'Predictions: {predictions}\nTargets: {targets}')
 
-        mcms = MultiConfusionMatrices(class_count)
         mcms.update(predictions, targets)
         print(mcms)
 
         accs = accuracy(outputs, targets)
-        print(f"acc@1:\t{accs[0]:.3f}")
+        acc_sum += accs[0] * batch_size
+        total += batch_size
+        acc1 = acc_sum / total
+        
+        print(acc1, total)
 
-        assert mcms.accuracy == accs[0]
+        assert mcms.accuracy == acc1
