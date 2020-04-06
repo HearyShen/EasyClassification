@@ -142,10 +142,11 @@ def worker(args, cfgs: dict):
     # create lr_scheduler to operate lr decay
     lr_scheduler_arch = cfgs['lr_scheduler'].get('arch')
     lr_scheduler_kwargs = cfgs['lr_scheduler'].get('kwargs')
+    if lr_scheduler_arch != 'ReduceLROnPlateau':
+        lr_scheduler_kwargs['last_epoch'] = start_epoch - 1
     lr_scheduler = easycls.optims.lr_schedulers.__dict__[lr_scheduler_arch](
         optimizer,
-        **lr_scheduler_kwargs if lr_scheduler_kwargs else {},
-        last_epoch=start_epoch - 1)
+        **lr_scheduler_kwargs if lr_scheduler_kwargs else {})
     logger.info(
         f"Creating learning-rate scheduler '{lr_scheduler_arch}' with specs: {lr_scheduler_kwargs}."
     )
@@ -156,7 +157,7 @@ def worker(args, cfgs: dict):
     for epoch in range(start_epoch, total_epoch):
         tic = time.time()
         logger.info(
-            f'Starting epoch: {epoch}/{total_epoch}, lr: {lr_scheduler.get_last_lr()}, time: {helpers.readable_time()}.'
+            f'Starting epoch: {epoch}/{total_epoch}, lr: {easycls.optims.get_lrs(optimizer)}, time: {helpers.readable_time()}.'
         )
 
         # train for one epoch
@@ -177,10 +178,10 @@ def worker(args, cfgs: dict):
         test_accs, test_loss, test_cms = easycls.apis.validate(
             test_loader, model, lossfunc, args, cfgs)
         logger.info(f"[Eval] [Test] Epoch: {epoch}, {helpers.AverageMeter.str_all(test_accs)}, {test_loss.get_avg_str()}.")
-        logger.info(f"[Eval] [Test] Confusion matrices of '{test_accs.num_classes}' classes: \n{test_cms}")
+        logger.info(f"[Eval] [Test] Confusion matrices of '{test_cms.num_classes}' classes: \n{test_cms}")
 
         # adjust the learning rate
-        lr_scheduler.step()
+        lr_scheduler.step(**{'metrics': val_loss.avg} if lr_scheduler_arch == 'ReduceLROnPlateau' else {})
 
         # remember best acc@1 and save checkpoint
         if args.device == 'cuda':

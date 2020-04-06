@@ -50,10 +50,11 @@ optimizer:
 # Learning-rate Scheduler configurations
 # learning-rate scheduler's architecture and keyword-arguments
 lr_scheduler: 
-  arch: StepLR
+  arch: ReduceLROnPlateau
   kwargs:
-    step_size: 30
-    gamma: 0.1
+    mode: min
+    factor: 0.1
+    patience: 5
 
 
 # Speed configurations
