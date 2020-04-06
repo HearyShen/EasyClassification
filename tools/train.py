@@ -75,8 +75,8 @@ def worker(args, cfgs: dict):
     # create model
     model_arch = cfgs["model"].get("arch")
     model_kwargs = cfgs["model"].get("kwargs")
-    model = easycls.models.__dict__[model_arch](**model_kwargs if model_kwargs else {})
     logger.info(f"Creating model '{model_arch}' with specs: {model_kwargs}.")
+    model = easycls.models.__dict__[model_arch](**model_kwargs if model_kwargs else {})
 
     # resume as specified
     start_epoch = 0
@@ -110,19 +110,18 @@ def worker(args, cfgs: dict):
     # create optimizer after model parameters being in the consistent location
     optimizer_arch = cfgs['optimizer'].get('arch')
     optimizer_kwargs = cfgs['optimizer'].get('kwargs')
+    logger.info(f"Creating optimizer '{optimizer_arch}' with specs: {optimizer_kwargs}.")
     optimizer = easycls.optims.__dict__[optimizer_arch](
         model.parameters(), **optimizer_kwargs if optimizer_kwargs else {})
-    logger.info(
-        f"Creating optimizer '{optimizer_arch}' with specs: {optimizer_kwargs}.")
     if args.resume:
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
     # create the lossfunc(loss function)
     loss_arch = cfgs['loss'].get('arch')
     loss_kwargs = cfgs['loss'].get('kwargs')
+    logger.info(f"Creating loss '{loss_arch}' with specs: {loss_kwargs}.")
     lossfunc = easycls.modules.__dict__[loss_arch](
         **loss_kwargs if loss_kwargs else {}).to(torch.device(args.device))
-    logger.info(f"Creating loss '{loss_arch}' with specs: {loss_kwargs}.")
 
     # speedup for batches with fixed-size input
     cudnn.benchmark = cfgs['speed'].get('cudnn_benchmark', False)
@@ -144,12 +143,10 @@ def worker(args, cfgs: dict):
     lr_scheduler_kwargs = cfgs['lr_scheduler'].get('kwargs')
     if lr_scheduler_arch != 'ReduceLROnPlateau':
         lr_scheduler_kwargs['last_epoch'] = start_epoch - 1
+    logger.info(f"Creating learning-rate scheduler '{lr_scheduler_arch}' with specs: {lr_scheduler_kwargs}.")
     lr_scheduler = easycls.optims.lr_schedulers.__dict__[lr_scheduler_arch](
         optimizer,
         **lr_scheduler_kwargs if lr_scheduler_kwargs else {})
-    logger.info(
-        f"Creating learning-rate scheduler '{lr_scheduler_arch}' with specs: {lr_scheduler_kwargs}."
-    )
     if args.resume:
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler_state_dict'])
 

@@ -70,16 +70,15 @@ def worker(args, cfgs: dict):
     # create model
     model_arch = cfgs["model"].get("arch")
     model_kwargs = cfgs["model"].get("kwargs")
-    model = easycls.models.__dict__[model_arch](**model_kwargs if model_kwargs else {})
     logger.info(f"Creating model '{model_arch}' with specs: {model_kwargs}.")
+    model = easycls.models.__dict__[model_arch](**model_kwargs if model_kwargs else {})
 
     # resume as specified
     if args.resume:
         try:
             checkpoint = helpers.load_checkpoint(args.resume)
         except FileNotFoundError as error:
-            logger.error(
-                f"Evaluation failed, no checkpoint found at '{args.resume}'.")
+            logger.error(f"Evaluation failed, no checkpoint found at '{args.resume}'.")
             return
         else:
             model.load_state_dict(checkpoint['model_state_dict'])
@@ -97,15 +96,14 @@ def worker(args, cfgs: dict):
         # model = model.cuda()      # even on single-gpu node, DataParallel is still slightly falster than non-DataParallel
         model = torch.nn.DataParallel(model).cuda()
         args.device = 'cuda'
-        logger.info(
-            "Using DataParallel for GPU(s) CUDA accelerated evaluating.")
+        logger.info("Using DataParallel for GPU(s) CUDA accelerated evaluating.")
 
     # create the lossfunc(loss function)
     loss_arch = cfgs['loss'].get('arch')
     loss_kwargs = cfgs['loss'].get('kwargs')
+    logger.info(f"Creating loss '{loss_arch}' with specs: {loss_kwargs}.")
     lossfunc = easycls.modules.__dict__[loss_arch](
         **loss_kwargs if loss_kwargs else {}).to(torch.device(args.device))
-    logger.info(f"Creating loss '{loss_arch}' with specs: {loss_kwargs}.")
 
     # speedup for batches with fixed-size input
     cudnn.benchmark = cfgs['speed'].get('cudnn_benchmark', False)
