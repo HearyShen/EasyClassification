@@ -1,7 +1,8 @@
 import time
 import datetime
 
-def format_time(timestamp=time.time(), format=r"%Y%m%d_%H%M%S"):
+
+def format_time(timestamp=None, format=r"%Y%m%d-%H%M%S"):
     """
     Return a formatted time string
 
@@ -22,11 +23,11 @@ def format_time(timestamp=time.time(), format=r"%Y%m%d_%H%M%S"):
     %I Hour (12-hour clock) as a decimal number [01,12]. 
     %p Locale's equivalent of either AM or PM.
     """
-    time_str = time.strftime(format, time.localtime(timestamp))
+    time_str = time.strftime(format, time.localtime(timestamp if timestamp else time.time()))
     return time_str
 
 
-def readable_time(timestamp=time.time()):
+def readable_time(timestamp=None):
     """
     Return a human-friendly string of a timestamp
 
@@ -40,8 +41,7 @@ def readable_time(timestamp=time.time()):
     Returns:
         str, a human-friendly readable string of the argument timestamp
     """
-    time_readable_str = str(time.asctime(time.localtime(timestamp)))
-    
+    time_readable_str = str(time.asctime(time.localtime(timestamp if timestamp else time.time())))
     return time_readable_str
 
 
@@ -62,16 +62,19 @@ def readable_eta(seconds_left):
     """
     eta_time = readable_time(time.time() + seconds_left)
     time_left = datetime.timedelta(seconds=int(seconds_left))
-
     return str(eta_time), str(time_left)
 
 
-# Unit Test
-if __name__ == "__main__":
-    ts = time.time()
-    print(f'Timestamp: {ts} -> {readable_time(ts)}')
-    print(f'format time: {format_time(ts)}')
+# # Unit Test
+# if __name__ == "__main__":
+#     ts = time.time()
+#     print(f'Timestamp: {ts} -> {readable_time(ts)}')
+#     print(f'format time: {format_time(ts)}')
 
-    seconds_left = 3600 * 25 + 90
-    eta, Tleft = readable_eta(seconds_left)
-    print(f'seconds_left: {seconds_left}\tETA: {eta}, in {Tleft}')
+#     seconds_left = 3600 * 25 + 90
+#     eta, Tleft = readable_eta(seconds_left)
+#     print(f'seconds_left: {seconds_left}, ETA: {eta}, in {Tleft}')
+
+#     print(readable_time(), format_time())
+#     time.sleep(3)
+#     print(readable_time(), format_time())
