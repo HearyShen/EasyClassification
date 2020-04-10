@@ -1,5 +1,4 @@
 import os
-import time
 from argparse import ArgumentParser
 import importlib
 import torch
