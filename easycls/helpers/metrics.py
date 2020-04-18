@@ -119,7 +119,7 @@ class ConfusionMatrix:
             self.total = self.TP + self.FP + self.FN + self.TN
 
             # compute accuracy, precision, recall and F1 metrics
-            self.accuracy = self.TP / self.total
+            self.accuracy = (self.TP + self.TN) / self.total
             self.precision = self.TP / (self.TP + self.FP + ZERO)
             self.recall = self.TP / (self.TP + self.FN + ZERO)
             self.f1 = 2 * self.precision * self.recall / (self.precision + self.recall + ZERO)
@@ -184,12 +184,12 @@ class ConfusionMatrix:
         """
         Compute the class accuracy of the model's outputs
 
-        Accuracy = TP / (TP + FP + FN + TN)
+        Accuracy = (TP + TN) / (TP + FP + FN + TN)
 
         Returns:
             Float, the accuracy of the current class
         """
-        # self.TP + self.FP + self.FN + self.TN
+        # self.accuracy = (self.TP + self.TN) / (self.TP + self.FP + self.FN + self.TN)
 
         return self.accuracy
 
