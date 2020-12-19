@@ -30,7 +30,7 @@ def accuracy(outputs: torch.Tensor, targets: torch.Tensor, topk=[1]):
 
         res = []
         for k in topk:
-            acc_k = correct[:k].view(-1).float().sum() / batch_size
+            acc_k = correct[:k].float().sum() / batch_size
             res.append(acc_k.item())  # accuracy in [0,1],float
         return res
 
