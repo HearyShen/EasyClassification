@@ -1,6 +1,7 @@
 import os
 import time
 from argparse import ArgumentParser
+import random
 import importlib
 import torch
 import torch.backends.cudnn as cudnn
@@ -71,6 +72,18 @@ def worker(args, cfgs: dict):
 
     # init test
     cuda_device_count = helpers.check_cuda()
+
+    # set random seed
+    random_seed = cfgs['basic'].get('random_seed')
+    if random_seed:
+        random.seed(random_seed)
+        torch.manual_seed(random_seed)
+        cudnn.deterministic = True
+        logger.warn('You have chosen to seed training. '
+                    'This will turn on the CUDNN deterministic setting, '
+                    'which can slow down your training considerably! '
+                    'You may see unexpected behavior when restarting '
+                    'from checkpoints.')
 
     # create model
     model_arch = cfgs["model"].get("arch")

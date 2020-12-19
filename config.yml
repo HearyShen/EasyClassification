@@ -10,6 +10,7 @@
 # basic configurations for training, evaluating and etc.
 basic: 
   # general
+  random_seed: 12345
   epochs: 90
   batch_size: 32
   topk_accs: 
