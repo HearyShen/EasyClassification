@@ -70,14 +70,15 @@ def worker(args, cfgs: dict):
     # set random seed
     random_seed = cfgs['basic'].get('random_seed')
     if random_seed:
+        logger.info(f"Set random seed: {random_seed}")
         random.seed(random_seed)
         torch.manual_seed(random_seed)
         cudnn.deterministic = True
-        logger.warn('You have chosen to seed training. '
-                    'This will turn on the CUDNN deterministic setting, '
-                    'which can slow down your training considerably! '
-                    'You may see unexpected behavior when restarting '
-                    'from checkpoints.')
+        logger.warning('You have chosen to seed training. '
+                       'This will turn on the CUDNN deterministic setting, '
+                       'which can slow down your training considerably! '
+                       'You may see unexpected behavior when restarting '
+                       'from checkpoints.')
 
     # create model
     model_arch = cfgs["model"].get("arch")
