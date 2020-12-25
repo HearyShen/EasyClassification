@@ -85,6 +85,7 @@ def worker(args, cfgs: dict):
     model_kwargs = cfgs["model"].get("kwargs")
     logger.info(f"Creating model '{model_arch}' with specs: {model_kwargs}.")
     model = easycls.models.__dict__[model_arch](**model_kwargs if model_kwargs else {})
+    logger.info(f"Model arch: \n{model}")
 
     # resume as specified
     if args.resume:
