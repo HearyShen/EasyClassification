@@ -12,7 +12,7 @@ def fresnet18(pretrained=False, num_classes=1000, **kwargs):
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
-        num_classes (int): If pretrained is ture and num_classes is not default 1000, 
+        num_classes (int): If pretrained is true and num_classes is not default 1000, 
                         model's last fc layer will be replaced after loading pretrained model.
     """
     if pretrained and num_classes != 1000:
@@ -31,7 +31,7 @@ def fresnet34(pretrained=False, num_classes=1000, **kwargs):
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
-        num_classes (int): If pretrained is ture and num_classes is not default 1000, 
+        num_classes (int): If pretrained is true and num_classes is not default 1000, 
                         model's last fc layer will be replaced after loading pretrained model.
     """
     if pretrained and num_classes != 1000:
@@ -50,7 +50,7 @@ def fresnet50(pretrained=False, num_classes=1000, **kwargs):
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
-        num_classes (int): If pretrained is ture and num_classes is not default 1000, 
+        num_classes (int): If pretrained is true and num_classes is not default 1000, 
                         model's last fc layer will be replaced after loading pretrained model.
     """
     if pretrained and num_classes != 1000:
@@ -69,7 +69,7 @@ def fresnet101(pretrained=False, num_classes=1000, **kwargs):
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
-        num_classes (int): If pretrained is ture and num_classes is not default 1000, 
+        num_classes (int): If pretrained is true and num_classes is not default 1000, 
                         model's last fc layer will be replaced after loading pretrained model.
     """
     if pretrained and num_classes != 1000:
@@ -88,7 +88,7 @@ def fresnet152(pretrained=False, num_classes=1000, **kwargs):
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
-        num_classes (int): If pretrained is ture and num_classes is not default 1000, 
+        num_classes (int): If pretrained is true and num_classes is not default 1000, 
                         model's last fc layer will be replaced after loading pretrained model.
     """
     if pretrained and num_classes != 1000:
